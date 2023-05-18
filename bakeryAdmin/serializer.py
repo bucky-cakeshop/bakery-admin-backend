@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MeasureUnit, Ingredient
+from .models import MeasureUnit, Ingredient, FixedCost
 
 class MeasureUnitSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,3 +17,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = '__all__'
     
+class FixedCostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FixedCost
+        fields = '__all__'

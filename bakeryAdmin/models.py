@@ -15,3 +15,11 @@ class Ingredient(models.Model):
     
     def __str__(self):
         return self.name
+
+class FixedCost(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    amount = models.FloatField() #, max_digits=6 decimal_places=2
+
+    def __str__(self):
+        return self.title + self.amount

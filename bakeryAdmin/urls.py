@@ -6,6 +6,7 @@ from bakeryAdmin import views
 router = routers.DefaultRouter()
 router.register(r'measure-unit', views.MeasureUnitView)
 router.register(r'ingredient', views.IngredientView)
+router.register(r'fixed-cost', views.FixedCostView)
 urlpatterns = [
     path("api/v1/", include(router.urls)),
     #path('docs/', include_docs_urls(title="BakeryAdmin API"))
