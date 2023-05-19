@@ -19,7 +19,25 @@ class Ingredient(models.Model):
 class FixedCost(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    amount = models.FloatField() #, max_digits=6 decimal_places=2
+    amount = models.FloatField()
 
     def __str__(self):
         return self.title + self.amount
+
+class Recipe(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    creationAt = models.DateTimeField()
+    updatedAt = models.DateTimeField()
+    deleted = models.BooleanField()
+
+    def __str__(self):
+        return self.title
+
+class RecipeDetail(models.Model):
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.DO_NOTHING)
+    quantity = models.DecimalField(max_digits=4,decimal_places=1)
+    measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.DO_NOTHING)
+
+    def __str__(self):
+        return f'{self.ingredient.name} {self.measureUnit.symbol}'

@@ -1,7 +1,7 @@
 from requests import Response
 from rest_framework import viewsets
-from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer
-from .models import MeasureUnit, Ingredient, FixedCost
+from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, RecipeSerializer, RecipeDetailSerializer
+from .models import MeasureUnit, Ingredient, FixedCost, Recipe, RecipeDetail
 
 # Create your views here.
 class MeasureUnitView(viewsets.ModelViewSet):
@@ -15,3 +15,11 @@ class IngredientView(viewsets.ModelViewSet):
 class FixedCostView(viewsets.ModelViewSet):
     serializer_class = FixedCostSerializer
     queryset = FixedCost.objects.all()
+
+class RecipeView(viewsets.ModelViewSet):
+    serializer_class = RecipeSerializer
+    queryset = Recipe.objects.all()
+
+class RecipeDetailView(viewsets.ModelViewSet):
+    serializer_class = RecipeDetailSerializer
+    queryset = RecipeDetail.objects.all()
