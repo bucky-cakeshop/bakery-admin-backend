@@ -23,21 +23,9 @@ class FixedCostSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RecipeSerializer(serializers.ModelSerializer):
-    measureUnit = serializers.PrimaryKeyRelatedField(queryset=MeasureUnit.objects.all()) 
-    measureUnit_object = serializers.SerializerMethodField()
-    ingredient = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all()) 
-    ingredient_object = serializers.SerializerMethodField()
-
-    def get_measureUnit_object(self, obj):
-        return {'id': obj.measureUnit.id, 'name': obj.measureUnit.title, 'symbol': obj.measureUnit.symbol}
-
-    def get_ingredient_object(self, obj):
-        return {'id': obj.ingredient.id, 'name': obj.ingredient.name}
-
     class Meta:
         model = Recipe
-        fields = '__all__'
-
+        fields = ['id','title']#'recipeDetail'
 
 class RecipeDetailSerializer(serializers.ModelSerializer):
     recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all()) 
@@ -61,3 +49,13 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeDetail
         fields = '__all__'
+
+class MeasureUnitForDetailSerializaer(serializers.ModelSerializer):
+    class Meta:
+        model = MeasureUnit
+        fields = ['id','title','symbol']
+
+class IngredientForDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ['id','name']
