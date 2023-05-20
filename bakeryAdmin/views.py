@@ -28,6 +28,16 @@ class RecipeView(viewsets.ModelViewSet):
         recipe = RecipeDetail.objects.filter(recipe_id = pk)
         serializer = RecipeDetailSerializer(recipe, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
+    
+    @action(detail=True, url_path='calculate-total')
+    def calculate_total(self, request, pk=None):
+        details = list(RecipeDetail.objects.filter(recipe_id = pk))
+        for detail in details:
+            ing = Ingredient.objects.get(id=detail.ingredient_id)#id = detail.ingredient_id
+            print(repr(ing))
+        
+        return Response({"message":"done"},status=status.HTTP_200_OK)
+
 
 class RecipeDetailView(viewsets.ModelViewSet):
     serializer_class = RecipeDetailSerializer
