@@ -1,8 +1,6 @@
 from rest_framework.response import Response
-from rest_framework import viewsets
-from rest_framework import status
 from rest_framework.decorators import action
-from django.core import serializers
+from rest_framework import viewsets, status
 from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, RecipeSerializer, RecipeDetailSerializer
 from .models import MeasureUnit, Ingredient, FixedCost, Recipe, RecipeDetail
 
@@ -33,7 +31,9 @@ class RecipeView(viewsets.ModelViewSet):
     def calculate_total(self, request, pk=None):
         details = list(RecipeDetail.objects.filter(recipe_id = pk))
         for detail in details:
-            ing = Ingredient.objects.get(id=detail.ingredient_id)#id = detail.ingredient_id
+            # Should get Ingredient stock the last one available from batch and exp date
+            # This is not the right place for this functionality. Probable it's part of production module.
+            ing = Ingredient.objects.get(id=detail.ingredient_id)
             print(repr(ing))
         
         return Response({"message":"done"},status=status.HTTP_200_OK)
