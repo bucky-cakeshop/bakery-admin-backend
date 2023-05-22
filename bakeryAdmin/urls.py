@@ -8,7 +8,7 @@ router.register(r'measure-unit', views.MeasureUnitView)
 router.register(r'ingredient', views.IngredientView)
 router.register(r'fixed-cost', views.FixedCostView)
 router.register(r'recipe', views.RecipeView)
-# router.register(r'recipe-detail', views.RecipeDetailView)
+router.register(r'recipe-detail', views.RecipeDetailView)
 # router.register(r'recipe-detail-by-recipe', views.RecipeDetailByRecipeView)
 
 urlpatterns = [
