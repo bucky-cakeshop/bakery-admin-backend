@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import EmailValidator
 from django.utils import timezone
 
 # Create your models here.
@@ -46,3 +47,17 @@ class RecipeDetail(models.Model):
     
     def __str__(self):
         return f'{self.ingredient.name} {self.measureUnit.symbol}'
+
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=200)
+    email = models.CharField(blank=True,
+                             max_length=254,
+                             null=True,
+                             validators=[EmailValidator(message="Email no válido")])
+    web = models.CharField(max_length=200, blank=True)
+    phone = models.CharField(max_length=20)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return f'{self.name}'

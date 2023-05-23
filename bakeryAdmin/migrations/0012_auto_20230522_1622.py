@@ -10,8 +10,9 @@ def add_measure_units(apps, schema_editor):
     symbol = 'Pl.'
     description = 'Unidad de medida utilizada por ejemplo en el papel manteca'
 
-    measure_unit = MeasureUnit(id=id,title=title,symbol=symbol,description=description)
-    measure_unit.save()
+    if not MeasureUnit.objects.filter(id = 6).exists():
+        measure_unit = MeasureUnit(id=id,title=title,symbol=symbol,description=description)
+        measure_unit.save()
 
 def remove_measure_units(apps, schema_editor):
 
