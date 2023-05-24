@@ -10,8 +10,10 @@ router.register(r'fixed-cost', views.FixedCostView)
 router.register(r'recipe', views.RecipeView)
 router.register(r'recipe-detail', views.RecipeDetailView)
 router.register(r'supplier', views.SupplierView)
+router.register(r'make', views.MakeView)
 router.register(r'buy-order', views.BuyOrderView)
 router.register(r'buy-order-detail', views.BuyOrderDetailView)
+
 
 urlpatterns = [
     path("api/v1/", include(router.urls)),

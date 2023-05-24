@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MeasureUnit, Ingredient, FixedCost, Recipe, RecipeDetail, Supplier,BuyOrder,BuyOrderDetail
+from .models import MeasureUnit, Ingredient, FixedCost, Recipe, RecipeDetail, Supplier,BuyOrder,BuyOrderDetail,Make
 
 class MeasureUnitSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,6 +44,11 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         model = RecipeDetail
         fields = '__all__'
 
+class MakeSerializer(serializers.ModelSerializer):  
+    class Meta:
+        model = Make
+        fields = '__all__'
+
 class MeasureUnitForDetailSerializaer(serializers.ModelSerializer):
     class Meta:
         model = MeasureUnit
@@ -79,11 +84,17 @@ class BuyOrderDetailSerializer(serializers.ModelSerializer):
     ingredient = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all()) 
     ingredient_object = serializers.SerializerMethodField()
 
+    make = serializers.PrimaryKeyRelatedField(queryset=Make.objects.all()) 
+    make_object = serializers.SerializerMethodField()
+
     def get_measureUnit_object(self, obj):
-        return {'id': obj.measureUnit.id, 'name': obj.measureUnit.title, 'symbol': obj.measureUnit.symbol}
+        return {'id': obj.measureUnit.id, 'title': obj.measureUnit.title, 'symbol': obj.measureUnit.symbol}
 
     def get_ingredient_object(self, obj):
         return {'id': obj.ingredient.id, 'name': obj.ingredient.name}
+    
+    def get_make_object(self, obj):
+        return {'id': obj.make.id, 'name': obj.make.name}
 
     class Meta:
         model = BuyOrderDetail

@@ -1,8 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
-from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,BuyOrderSerializer,BuyOrderDetailSerializer
-from .models import MeasureUnit, Ingredient, FixedCost, Recipe, RecipeDetail, Supplier,BuyOrder,BuyOrderDetail
+from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,BuyOrderSerializer,BuyOrderDetailSerializer, MakeSerializer
+from .models import MeasureUnit, Ingredient, FixedCost, Recipe, RecipeDetail, Supplier,BuyOrder,BuyOrderDetail, Make
 
 # Create your views here.
 class MeasureUnitView(viewsets.ModelViewSet):
@@ -46,6 +46,10 @@ class RecipeDetailView(viewsets.ModelViewSet):
 class SupplierView(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     queryset = Supplier.objects.all()
+
+class MakeView(viewsets.ModelViewSet):
+    serializer_class = MakeSerializer
+    queryset = Make.objects.all()
 
 class BuyOrderView(viewsets.ModelViewSet):
     serializer_class = BuyOrderSerializer

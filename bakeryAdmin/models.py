@@ -64,6 +64,18 @@ class Supplier(models.Model):
     def __str__(self):
         return f'{self.name}'
     
+class Make(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.capitalize()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.name}'
+
+
 class BuyOrder(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.DO_NOTHING)
     description = models.TextField(blank=True)
@@ -86,6 +98,7 @@ class BuyOrderDetail(models.Model):
     price = models.DecimalField(max_digits=4,decimal_places=2)
     batch = models.CharField(max_length=200)
     expirationDate = models.DateField()
+    make = models.ForeignKey(Make, on_delete=models.DO_NOTHING, default=None)
 
     def save(self, *args, **kwargs):
         if self.expirationDate < timezone.now().date():
