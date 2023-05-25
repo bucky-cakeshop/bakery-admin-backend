@@ -11,8 +11,10 @@ router.register(r'recipe', views.RecipeView)
 router.register(r'recipe-detail', views.RecipeDetailView)
 router.register(r'supplier', views.SupplierView)
 router.register(r'make', views.MakeView)
-router.register(r'buy-order', views.BuyOrderView)
-router.register(r'buy-order-detail', views.BuyOrderDetailView)
+router.register(r'supplier-invoice', views.SupplierInvoiceView)
+router.register(r'supplier-invoice-detail', views.SupplierInvoiceDetailView)
+router.register(r'production-order', views.ProductionOrderView)
+router.register(r'production-order-detail', views.ProductionOrderDetailView)
 
 
 urlpatterns = [

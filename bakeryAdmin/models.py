@@ -76,7 +76,7 @@ class Make(models.Model):
         return f'{self.name}'
 
 
-class BuyOrder(models.Model):
+class SupplierInvoice(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.DO_NOTHING)
     description = models.TextField(blank=True)
     creationAt = models.DateTimeField(auto_now_add=True)
@@ -90,8 +90,8 @@ class BuyOrder(models.Model):
         self.updatedAt = timezone.now()
         return super().save(*args, **kwargs)
 
-class BuyOrderDetail(models.Model):
-    buyOrder = models.ForeignKey(BuyOrder, on_delete=models.CASCADE,related_name='buyOrder')
+class SupplierInvoiceDetail(models.Model):
+    supplierInvoice = models.ForeignKey(SupplierInvoice, on_delete=models.CASCADE,related_name='supplierInvoice')
     ingredient = models.ForeignKey(Ingredient, on_delete=models.DO_NOTHING)
     measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.DO_NOTHING)
     quantity = models.DecimalField(max_digits=5,decimal_places=2)
@@ -105,4 +105,22 @@ class BuyOrderDetail(models.Model):
             raise ValidationError("La fecha de expiración no puede estar en el pasado!")
         super().save(*args, **kwargs)
 
+class ProductionOrder(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    creationAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now_add=True)
+    deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.supplier.name}'
+    
+    def save(self, *args, **kwargs):
+        self.updatedAt = timezone.now()
+        return super().save(*args, **kwargs)
+
+class ProductionOrderDetail(models.Model):
+    productionOrder = models.ForeignKey(ProductionOrder, on_delete=models.CASCADE,related_name='productionOrder')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,related_name='productionOrder_recipe')
+    quantity = models.DecimalField(max_digits=5,decimal_places=2)
 

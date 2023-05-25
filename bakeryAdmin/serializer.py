@@ -1,34 +1,34 @@
 from rest_framework import serializers
-from .models import MeasureUnit, Ingredient, FixedCost, Recipe, RecipeDetail, Supplier,BuyOrder,BuyOrderDetail,Make
+from bakeryAdmin import models
 
 class MeasureUnitSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MeasureUnit
+        model = models.MeasureUnit
         fields = '__all__'
 
 class IngredientSerializer(serializers.ModelSerializer):  
     class Meta:
-        model = Ingredient
+        model = models.Ingredient
         fields = '__all__'
     
 class FixedCostSerializer(serializers.ModelSerializer):
     class Meta:
-        model = FixedCost
+        model = models.FixedCost
         fields = '__all__'
 
 class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Recipe
+        model = models.Recipe
         fields = ['id','title', 'description']#'recipeDetail'
 
 class RecipeDetailSerializer(serializers.ModelSerializer):
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all()) 
+    recipe = serializers.PrimaryKeyRelatedField(queryset=models.Recipe.objects.all()) 
     recipe_object = serializers.SerializerMethodField()
 
-    measureUnit = serializers.PrimaryKeyRelatedField(queryset=MeasureUnit.objects.all()) 
+    measureUnit = serializers.PrimaryKeyRelatedField(queryset=models.MeasureUnit.objects.all()) 
     measureUnit_object = serializers.SerializerMethodField()
 
-    ingredient = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all()) 
+    ingredient = serializers.PrimaryKeyRelatedField(queryset=models.Ingredient.objects.all()) 
     ingredient_object = serializers.SerializerMethodField()
 
     def get_recipe_object(self, obj):
@@ -41,50 +41,50 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         return {'id': obj.ingredient.id, 'name': obj.ingredient.name}
 
     class Meta:
-        model = RecipeDetail
+        model = models.RecipeDetail
         fields = '__all__'
 
 class MakeSerializer(serializers.ModelSerializer):  
     class Meta:
-        model = Make
+        model = models.Make
         fields = '__all__'
 
 class MeasureUnitForDetailSerializaer(serializers.ModelSerializer):
     class Meta:
-        model = MeasureUnit
+        model = models.MeasureUnit
         fields = ['id','title','symbol']
 
 class IngredientForDetailSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Ingredient
+        model = models.Ingredient
         fields = ['id','name']
 
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Supplier
+        model = models.Supplier
         fields = ['id','name','email','web','phone','description']
 
-class BuyOrderSerializer(serializers.ModelSerializer):
-    supplier = serializers.PrimaryKeyRelatedField(queryset=Supplier.objects.all()) 
+class SupplierInvoiceSerializer(serializers.ModelSerializer):
+    supplier = serializers.PrimaryKeyRelatedField(queryset=models.Supplier.objects.all()) 
     supplier_object = serializers.SerializerMethodField()
 
     def get_supplier_object(self, obj):
         return {'id': obj.supplier.id, 'name': obj.supplier.name}
 
     class Meta:
-        model = BuyOrder
+        model = models.SupplierInvoice
         fields = '__all__'#['id','supplier','description']
 
-class BuyOrderDetailSerializer(serializers.ModelSerializer):
-    buyOrder = serializers.PrimaryKeyRelatedField(queryset=BuyOrder.objects.all()) 
+class SupplierInvoiceDetailSerializer(serializers.ModelSerializer):
+    supplierInvoice = serializers.PrimaryKeyRelatedField(queryset=models.SupplierInvoice.objects.all()) 
 
-    measureUnit = serializers.PrimaryKeyRelatedField(queryset=MeasureUnit.objects.all()) 
+    measureUnit = serializers.PrimaryKeyRelatedField(queryset=models.MeasureUnit.objects.all()) 
     measureUnit_object = serializers.SerializerMethodField()
 
-    ingredient = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all()) 
+    ingredient = serializers.PrimaryKeyRelatedField(queryset=models.Ingredient.objects.all()) 
     ingredient_object = serializers.SerializerMethodField()
 
-    make = serializers.PrimaryKeyRelatedField(queryset=Make.objects.all()) 
+    make = serializers.PrimaryKeyRelatedField(queryset=models.Make.objects.all()) 
     make_object = serializers.SerializerMethodField()
 
     def get_measureUnit_object(self, obj):
@@ -97,5 +97,23 @@ class BuyOrderDetailSerializer(serializers.ModelSerializer):
         return {'id': obj.make.id, 'name': obj.make.name}
 
     class Meta:
-        model = BuyOrderDetail
+        model = models.SupplierInvoiceDetail
+        fields = '__all__'
+
+class ProductionOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ProductionOrder
+        fields = '__all__'
+
+class ProductionOrderDetailSerializer(serializers.ModelSerializer):
+    productionOrder = serializers.PrimaryKeyRelatedField(queryset=models.ProductionOrder.objects.all()) 
+
+    recipe = serializers.PrimaryKeyRelatedField(queryset=models.Recipe.objects.all()) 
+    recipe_object = serializers.SerializerMethodField()
+
+    def get_recipe_object(self, obj):
+        return {'id': obj.recipe.id, 'title': obj.recipe.title}
+
+    class Meta:
+        model = models.ProductionOrderDetail
         fields = '__all__'
