@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
 from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer
+import json
+
 # Create your views here.
 class MeasureUnitView(viewsets.ModelViewSet):
     serializer_class = MeasureUnitSerializer
@@ -84,7 +86,19 @@ class ProductionOrderView(viewsets.ModelViewSet):
         productionOrder = models.ProductionOrderDetail.objects.filter(productionOrder_id = pk)
         serializer = ProductionOrderDetailSerializer(productionOrder, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
-    
+
+    @action(detail=True, url_path='get-ingredients')
+    def get_ingredients(self, request, pk=None):
+        productionOrderDetails = models.ProductionOrderDetail.objects.filter(productionOrder_id = pk)
+        result = models.RecipeDetail.objects.none() 
+        for detail in productionOrderDetails:
+            recipeDetails = models.RecipeDetail.objects.filter(recipe_id = detail.recipe.id)
+            result = result | recipeDetails
+
+        result = result.order_by("ingredient","quantity")
+        serializer = RecipeDetailSerializer(result, many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
 class ProductionOrderDetailView(viewsets.ModelViewSet):
     serializer_class = ProductionOrderDetailSerializer
     queryset = models.ProductionOrderDetail.objects.all()
