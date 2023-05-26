@@ -45,7 +45,7 @@ class RecipeDetail(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,related_name='recipe')
     ingredient = models.ForeignKey(Ingredient, on_delete=models.DO_NOTHING)
     measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.DO_NOTHING)
-    quantity = models.DecimalField(max_digits=4,decimal_places=2)
+    quantity = models.DecimalField(max_digits=5,decimal_places=2)
     
     def __str__(self):
         return f'{self.recipe.title} {self.ingredient.name} {self.quantity} {self.measureUnit.symbol}'
