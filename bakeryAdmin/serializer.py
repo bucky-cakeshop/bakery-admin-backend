@@ -117,3 +117,16 @@ class ProductionOrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProductionOrderDetail
         fields = '__all__'
+
+class AggregatedIngredientSerializer(serializers.Serializer):
+    ingredientId = serializers.IntegerField()
+    ingredientName = serializers.CharField()
+    measureUnitId = serializers.IntegerField()
+    measureUnitSymbol = serializers.CharField()
+    # quantity = serializers.DecimalField(max_digits=5,decimal_places=2)
+    # recipeQuantity = serializers.DecimalField(max_digits=5,decimal_places=2)
+    total = serializers.DecimalField(max_digits=5,decimal_places=2)
+    #total = serializers.CharField()
+
+    class Meta:
+        fields = '__all__'

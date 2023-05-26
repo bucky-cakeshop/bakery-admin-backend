@@ -48,7 +48,7 @@ class RecipeDetail(models.Model):
     quantity = models.DecimalField(max_digits=4,decimal_places=2)
     
     def __str__(self):
-        return f'{self.ingredient.name} {self.measureUnit.symbol}'
+        return f'{self.recipe.title} {self.ingredient.name} {self.quantity} {self.measureUnit.symbol}'
 
 
 class Supplier(models.Model):
