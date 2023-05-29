@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
 from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer
-from .services.productionOrders.AggrgatedIngredientsCalculation import CalculateAggregatedIngredients
+from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService
 import json
 
 # Create your views here.
@@ -102,15 +102,16 @@ class ProductionOrderView(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='get-aggregated-ingredients')
     def get_aggregated_ingredients(self, request, pk=None):
-        result = CalculateAggregatedIngredients(pk).calculate()
-
-        # serializer = RecipeDetailSerializer(result, many=True)
-        # return Response(serializer.data,status=status.HTTP_200_OK)
+        result = ProdcutionOrderService(pk).calculateAggregatedIngredients()
         serializer = AggregatedIngredientSerializer(result, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
-        # json_string = [ob.to_dict() for ob in result]
-        # return json.dumps({"results":json_string})
 
+    @action(detail=True, url_path='get-ingredients-stock')
+    def get_ingredients_stock(self, request, pk=None):
+        result = ProdcutionOrderService(pk).getIngredientsFromStock()
+        # serializer = AggregatedIngredientSerializer(result, many=True)
+        # return Response(serializer.data,status=status.HTTP_200_OK)
+        return Response({'message':'ok'},status=status.HTTP_200_OK)
         
 
 class ProductionOrderDetailView(viewsets.ModelViewSet):

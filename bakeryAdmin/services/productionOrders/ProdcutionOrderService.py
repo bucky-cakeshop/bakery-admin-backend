@@ -1,6 +1,9 @@
 from itertools import groupby
 import json
-from ...models import ProductionOrderDetail, RecipeDetail
+from django.core.serializers.json import DjangoJSONEncoder
+from collections import namedtuple
+from decimal import Decimal
+from ...models import ProductionOrderDetail, RecipeDetail, SupplierInvoiceDetail
 
 class AggregatedIngredient:
     def __init__(self, ingredientId,ingredientName,measureUnitId,measureUnitSymbol,quantity, recipeQuantity):
@@ -25,11 +28,26 @@ class AggregatedIngredient:
     def __repr__(self):
         return f'IngredientId: {self.ingredientId} measureUnitId: {self.measureUnitId} Quantity: {self.quantity} recipeQuantity: {self.recipeQuantity}'
 
-class CalculateAggregatedIngredients:
+class AggregatedTotalIngredient:
+    def __init__(self, ingredientId,ingredientName,measureUnitId,measureUnitSymbol,total):
+        self.ingredientId = ingredientId
+        self.ingredientName = ingredientName
+        self.measureUnitId = measureUnitId
+        self.measureUnitSymbol = measureUnitSymbol
+        self.total = total
+
+    # def __str__(self):
+    #     return f'IngredientId: {self.ingredientId} measureUnitId: {self.measureUnitId} Total: {self.total}'
+
+    # def __repr__(self):
+    #     return f'IngredientId: {self.ingredientId} measureUnitId: {self.measureUnitId} Total: {self.total}'
+
+
+class ProdcutionOrderService:
     def __init__(self, productionOrderId) -> None:
         self.productionOrderId = productionOrderId
     
-    def calculate(self):
+    def calculateAggregatedIngredients(self):
         productionOrderDetails = ProductionOrderDetail.objects.filter(productionOrder_id = self.productionOrderId)
         aggregated = []
         for detail in productionOrderDetails:
@@ -55,3 +73,26 @@ class CalculateAggregatedIngredients:
                                            } )
             ]
         return aggregatedTotals
+    def customAggregatedTotalIngredientDecoder(self,dict):
+        return namedtuple(AggregatedTotalIngredient.__name__, dict.keys())(*dict.values())
+        #return AggregatedTotalIngredient(dict['ingredientId'],dict['ingredientName'],dict['measureUnitId'],dict['measureUnitSymbol'],dict['total'])
+    
+    def getIngredientsFromStock(self):
+        aggregatedIngredients = self.calculateAggregatedIngredients()
+        for aggregatedIngredient in aggregatedIngredients:
+            aggregatedIngredientObject = json.loads(json.dumps(aggregatedIngredient, cls=DjangoJSONEncoder),object_hook=self.customAggregatedTotalIngredientDecoder)
+            supplierInvoiceDetail = list(SupplierInvoiceDetail.objects.filter(ingredient = aggregatedIngredientObject.ingredientId).order_by('expirationDate'))
+            totalToConsume = Decimal(aggregatedIngredientObject.total)
+            supplierInvoiceDetailIdx = 0
+            while totalToConsume > 0:
+                detail = supplierInvoiceDetail[supplierInvoiceDetailIdx]
+                detail.quantityConsumed = totalToConsume
+                if totalToConsume > (detail.quantityAvailable):
+                    detail.quantityConsumed = detail.quantity
+                supplierInvoiceDetailIdx += 1
+                totalToConsume -= detail.quantity
+
+                print(detail)
+                print(totalToConsume)
+
+

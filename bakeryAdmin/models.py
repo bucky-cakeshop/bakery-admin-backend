@@ -11,7 +11,7 @@ class MeasureUnit(models.Model):
     description = models.TextField(blank=True)
 
     def __str__(self):
-        return self.title + self.symbol
+        return f'{self.title} {self.symbol}'
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=200)
@@ -99,11 +99,20 @@ class SupplierInvoiceDetail(models.Model):
     batch = models.CharField(max_length=200)
     expirationDate = models.DateField()
     make = models.ForeignKey(Make, on_delete=models.DO_NOTHING, default=None)
+    quantityConsumed = models.DecimalField(max_digits=5,decimal_places=2, default=0)
+
+    @property
+    def quantityAvailable(self):
+        return self.quantity - self.quantityConsumed
 
     def save(self, *args, **kwargs):
         if self.expirationDate < timezone.now().date():
             raise ValidationError("La fecha de expiración no puede estar en el pasado!")
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.ingredient.name} {self.measureUnit.symbol} {self.batch} {self.expirationDate} {self.quantity} {self.quantityConsumed} Available: {self.quantity - self.quantityConsumed}'
+
 
 class ProductionOrder(models.Model):
     title = models.CharField(max_length=200)
@@ -111,6 +120,7 @@ class ProductionOrder(models.Model):
     creationAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False)
+    startedDate = models.DateTimeField(auto_now_add=False, default=None)
 
     def __str__(self):
         return f'{self.supplier.name}'
