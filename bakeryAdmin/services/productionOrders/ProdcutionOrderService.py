@@ -51,13 +51,14 @@ class AggregatedTotalIngredient:
 
 
 class ProdcutionOrderService:
-    def __init__(self, productionOrderId, poDetailsObjects, rDetailsObjects) -> None:
+    def __init__(self, productionOrderId, poDetailsObjects, rDetailsObjects, siDetailsObjects) -> None:
         self.productionOrderId = productionOrderId
         self.poDetailsObjects = poDetailsObjects
         self.rDetailsObjects = rDetailsObjects
+        self.siDetailsObjects = siDetailsObjects
     
     def testUnitTesting(self):
-        return self.poDetailsObjects.all()
+        return  [item for item in self.poDetailsObjects.filter()]
     
     def calculateAggregatedIngredients(self) -> list[AggregatedTotalIngredient]:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
@@ -99,7 +100,8 @@ class ProdcutionOrderService:
         for aggregatedIngredient in aggregatedIngredients:
             #aggregatedIngredientObject = json.loads(json.dumps(aggregatedIngredient, cls=DjangoJSONEncoder),object_hook=self.customAggregatedTotalIngredientDecoder)
             
-            supplierInvoiceDetail = list(SupplierInvoiceDetail.objects.filter(ingredient = aggregatedIngredient.ingredientId).order_by('expirationDate'))
+            supplierInvoiceDetail = list(self.siDetailsObjects.filter(ingredient = aggregatedIngredient.ingredientId).order_by('expirationDate'))
+
             # if there are not items should throw error
             totalToConsume = Decimal(aggregatedIngredient.total)
             supplierInvoiceDetailIdx = 0
