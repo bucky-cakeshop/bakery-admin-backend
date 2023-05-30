@@ -102,13 +102,13 @@ class ProductionOrderView(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='get-aggregated-ingredients')
     def get_aggregated_ingredients(self, request, pk=None):
-        result = ProdcutionOrderService(pk).calculateAggregatedIngredients()
+        result = ProdcutionOrderService(pk,models.ProductionOrderDetail.objects, models.RecipeDetail.objects).calculateAggregatedIngredients()
         serializer = AggregatedIngredientSerializer(result, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     @action(detail=True, url_path='get-ingredients-stock')
     def get_ingredients_stock(self, request, pk=None):
-        result = ProdcutionOrderService(pk).getIngredientsFromStock()
+        result = ProdcutionOrderService(pk, models.ProductionOrderDetail.objects, models.RecipeDetail.objects).getIngredientsFromStock()
         # serializer = AggregatedIngredientSerializer(result, many=True)
         # return Response(serializer.data,status=status.HTTP_200_OK)
         return Response({'message':'ok'},status=status.HTTP_200_OK)

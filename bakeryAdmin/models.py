@@ -120,7 +120,8 @@ class ProductionOrder(models.Model):
     creationAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False)
-    startedDate = models.DateTimeField(auto_now_add=False, default=None)
+    startedDate = models.DateTimeField(null=True, blank=True)
+    closedDate = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.supplier.name}'
