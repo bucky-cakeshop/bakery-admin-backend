@@ -1,10 +1,12 @@
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
-from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer
-from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService
+from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer
+from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum
 import json
+from django.core.serializers.json import DjangoJSONEncoder
 
 # Create your views here.
 class MeasureUnitView(viewsets.ModelViewSet):
@@ -108,10 +110,25 @@ class ProductionOrderView(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='get-ingredients-stock')
     def get_ingredients_stock(self, request, pk=None):
-        result = ProdcutionOrderService(pk, models.ProductionOrderDetail.objects, models.RecipeDetail.objects).getIngredientsFromStock()
-        # serializer = AggregatedIngredientSerializer(result, many=True)
-        # return Response(serializer.data,status=status.HTTP_200_OK)
-        return Response({'message':'ok'},status=status.HTTP_200_OK)
+        result = ProdcutionOrderService(pk, 
+                                        models.ProductionOrderDetail.objects, 
+                                        models.RecipeDetail.objects, 
+                                        models.SupplierInvoiceDetail.objects, 
+                                        models.ProductionOrderConsume.objects).getIngredientsFromStock()
+
+        if result.status == ProdcutionOrderStatusEnum.OK:
+            with transaction.atomic():
+                for siDetail in result.supplierInvoiceDetails:
+                    siDetail.save()
+                for poConsumes in result.productionOrderConsumes:
+                    models.ProductionOrderConsume.objects.create(
+                    productionOrder = models.ProductionOrder.objects.get(id = poConsumes.productionOrderId),
+                    supplierInvoiceDetail = models.SupplierInvoiceDetail.objects.get(id = poConsumes.supplierInvoiceDetailId),
+                    quantity = poConsumes.quantityConsumed
+                    )
+
+        serializer = ProductionOrderStatusSerializer(result, many=False)
+        return Response(serializer.data,status=status.HTTP_200_OK)
         
 
 class ProductionOrderDetailView(viewsets.ModelViewSet):

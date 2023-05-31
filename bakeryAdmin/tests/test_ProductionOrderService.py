@@ -1,3 +1,4 @@
+from datetime import date
 from unittest.mock import patch
 from django.test import TestCase
 from bakeryAdmin import models
@@ -12,7 +13,7 @@ class ProductionOrderServiceTest(TestCase):
             recipe=models.Recipe(title='Recipe test'), 
             quantity=10))
         mockPod.filter.return_value = podMock
-        service = ProdcutionOrderService(1, mockPod, None, None)
+        service = ProdcutionOrderService(1, mockPod, None, None, None)
         actual = service.testUnitTesting()
         self.assertEquals(10, actual[0].quantity)
 
@@ -35,7 +36,7 @@ class ProductionOrderServiceTest(TestCase):
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = rdFixture
 
-        service = ProdcutionOrderService(1, productionOrderDetailMock, recipeDetailMock, None)
+        service = ProdcutionOrderService(1, productionOrderDetailMock, recipeDetailMock, None, None)
         actual = service.calculateAggregatedIngredients()
 
         self.assertEqual(1,len(actual))
@@ -43,10 +44,12 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(1,actual[0].measureUnitId)
         self.assertEqual(12,actual[0].total)
 
+    @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
+    @patch('bakeryAdmin.models.SupplierInvoiceDetail.save')
     @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_getIngredientsFromStock(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock):
+    def test_getIngredientsFromStock(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock,supplierInvoiceDetailSaveMock, productionOrderConsumeMock):
         podFixture = []
         podFixture.append(models.ProductionOrderDetail(
             productionOrder=models.ProductionOrder(title='test'),
@@ -70,7 +73,7 @@ class ProductionOrderServiceTest(TestCase):
             quantity = 5,
             price = 2.3,
             batch = 'L1',
-            expirationDate = '2023-08-01'
+            expirationDate = date(2023,8,1)
         ))
         siFixture.append(
             models.SupplierInvoiceDetail(
@@ -81,7 +84,7 @@ class ProductionOrderServiceTest(TestCase):
             quantity = 5,
             price = 2.3,
             batch = 'L2',
-            expirationDate = '2023-08-02'
+            expirationDate = date(2023,8,2)
         ))
         siFixture.append(
             models.SupplierInvoiceDetail(
@@ -92,16 +95,16 @@ class ProductionOrderServiceTest(TestCase):
             quantity = 5,
             price = 2.3,
             batch = 'L3',
-            expirationDate = '2023-08-03'
+            expirationDate = date(2023,8,3)
         ))
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = rdFixture
-        #supplierInvoiceDetailMock.filter.return_value = siFixture
-        #supplierInvoiceDetailMock.filter.return_value.order_by.return_value = [siFixture.sort(key=lambda detail: detail.expirationDate)]
         supplierInvoiceDetailMock.filter.return_value.order_by.return_value = siFixture
 
-        service = ProdcutionOrderService(1, productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock)
+        service = ProdcutionOrderService(1, productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock)
         actual = service.getIngredientsFromStock()
+        self.assertTrue(supplierInvoiceDetailSaveMock.called)
+        
 
 
 

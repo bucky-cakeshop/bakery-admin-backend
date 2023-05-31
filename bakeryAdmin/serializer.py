@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from bakeryAdmin import models
+from bakeryAdmin.services.productionOrders.ProdcutionOrderService import ProdcutionOrderStatus
 
 class MeasureUnitSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,7 +20,7 @@ class FixedCostSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Recipe
-        fields = ['id','title', 'description']#'recipeDetail'
+        fields = ['id','title', 'description']
 
 class RecipeDetailSerializer(serializers.ModelSerializer):
     recipe = serializers.PrimaryKeyRelatedField(queryset=models.Recipe.objects.all()) 
@@ -73,7 +74,7 @@ class SupplierInvoiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.SupplierInvoice
-        fields = '__all__'#['id','supplier','description']
+        fields = '__all__'
 
 class SupplierInvoiceDetailSerializer(serializers.ModelSerializer):
     supplierInvoice = serializers.PrimaryKeyRelatedField(queryset=models.SupplierInvoice.objects.all()) 
@@ -123,10 +124,39 @@ class AggregatedIngredientSerializer(serializers.Serializer):
     ingredientName = serializers.CharField()
     measureUnitId = serializers.IntegerField()
     measureUnitSymbol = serializers.CharField()
-    # quantity = serializers.DecimalField(max_digits=5,decimal_places=2)
-    # recipeQuantity = serializers.DecimalField(max_digits=5,decimal_places=2)
     total = serializers.DecimalField(max_digits=5,decimal_places=2)
-    #total = serializers.CharField()
 
     class Meta:
+        fields = '__all__'
+
+class ProductionOrderConsumeItemSerializer(serializers.Serializer):
+    productionOrderId = serializers.IntegerField()
+    supplierInvoiceDetailId = serializers.IntegerField()
+    quantityConsumed = serializers.FloatField()
+
+class supplierInvoiceDetailForPoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    ingredient = serializers.SerializerMethodField()
+    measureUnit = serializers.SerializerMethodField()
+    quantity = serializers.FloatField()
+    quantityConsumed = serializers.FloatField()
+
+    def get_measureUnit(self, obj):
+        return {'id': obj.measureUnit.id, 'title': obj.measureUnit.title, 'symbol': obj.measureUnit.symbol}
+
+    def get_ingredient(self, obj):
+        return {'id': obj.ingredient.id, 'name': obj.ingredient.name}
+
+class ProductionOrderMissedItemSerializer(serializers.Serializer):
+    supplierInvoiceDetail = supplierInvoiceDetailForPoSerializer()
+    missingQuantity = serializers.FloatField()
+
+class ProductionOrderStatusSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    supplierInvoiceDetails = serializers.ListSerializer(child=supplierInvoiceDetailForPoSerializer())
+    productionOrderConsumes = serializers.ListSerializer(child=ProductionOrderConsumeItemSerializer())
+    missingIngredients = serializers.ListSerializer(child=ProductionOrderMissedItemSerializer())
+    
+    class Meta:
+        model = ProdcutionOrderStatus
         fields = '__all__'

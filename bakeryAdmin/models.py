@@ -124,7 +124,7 @@ class ProductionOrder(models.Model):
     closedDate = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f'{self.supplier.name}'
+        return f'{self.title}'
     
     def save(self, *args, **kwargs):
         self.updatedAt = timezone.now()
@@ -134,4 +134,11 @@ class ProductionOrderDetail(models.Model):
     productionOrder = models.ForeignKey(ProductionOrder, on_delete=models.CASCADE,related_name='productionOrder')
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,related_name='productionOrder_recipe')
     quantity = models.DecimalField(max_digits=5,decimal_places=2)
+
+class ProductionOrderConsume(models.Model):
+    productionOrder = models.ForeignKey(ProductionOrder, on_delete=models.CASCADE,related_name='productionOrderConsume_productionOrder')
+    supplierInvoiceDetail = models.ForeignKey(SupplierInvoiceDetail, on_delete=models.CASCADE,related_name='productionOrderConsume_supplierInvoiceDetail')
+    quantity = models.DecimalField(max_digits=5,decimal_places=2)
+    consumeDate = models.DateTimeField(auto_now_add=True)
+
 
