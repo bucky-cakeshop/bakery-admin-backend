@@ -148,8 +148,9 @@ class supplierInvoiceDetailForPoSerializer(serializers.Serializer):
         return {'id': obj.ingredient.id, 'name': obj.ingredient.name}
 
 class ProductionOrderMissedItemSerializer(serializers.Serializer):
-    supplierInvoiceDetail = supplierInvoiceDetailForPoSerializer()
-    missingQuantity = serializers.FloatField()
+    aggregatedTotalIngredient = AggregatedIngredientSerializer()
+    totalQuantityInStock = serializers.FloatField()
+    totalToConsume = serializers.FloatField()
 
 class ProductionOrderStatusSerializer(serializers.Serializer):
     status = serializers.IntegerField()

@@ -8,41 +8,6 @@ from decimal import Decimal
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F, Sum
 
-class ProdcutionOrderStatusEnum(int, Enum):
-    OK = 1
-    ERROR = 2
-
-@dataclass
-class ProductionOrderConsumeItem:
-    productionOrderId: int
-    supplierInvoiceDetailId: int
-    quantityConsumed: float
-
-    def to_dict(self):
-        return self.__dict__
-
-    def toJson(self):
-        return json.dumps(self, default=lambda o: str(o) if (isinstance(o,float) or isinstance(o,Decimal)) else o.__dict__, 
-            sort_keys=True, indent=4)
-
-
-
-@dataclass
-class ProdcutionOrderStatus:
-        status: ProdcutionOrderStatusEnum
-        supplierInvoiceDetails: list
-        productionOrderConsumes: list[ProductionOrderConsumeItem]
-        missingIngredients: list
-
-        def to_dict(self):
-            return self.__dict__
-    
-
-        def toJson(self):
-            return json.dumps(self, 
-                              default=lambda o: {o} if (isinstance(o,Decimal) or isinstance(o,float) or isinstance(o,datetime.date)) else o.__dict__, 
-                sort_keys=True, indent=4, cls=DjangoJSONEncoder)
-      
 class AggregatedIngredient:
     def __init__(self, ingredientId,ingredientName,measureUnitId,measureUnitSymbol,quantity, recipeQuantity):
         self.ingredientId = ingredientId
@@ -87,6 +52,47 @@ class AggregatedTotalIngredient:
     def __repr__(self):
         return f'IngredientId: {self.ingredientId} measureUnitId: {self.measureUnitId} Total: {self.total}'
 
+class ProdcutionOrderStatusEnum(int, Enum):
+    OK = 1
+    ERROR_MISSING_INGREDIENTS = 2
+
+@dataclass
+class ProductionOrderConsumeItem:
+    productionOrderId: int
+    supplierInvoiceDetailId: int
+    quantityConsumed: float
+
+    def to_dict(self):
+        return self.__dict__
+
+    def toJson(self):
+        return json.dumps(self, default=lambda o: str(o) if (isinstance(o,float) or isinstance(o,Decimal)) else o.__dict__, 
+            sort_keys=True, indent=4)
+
+@dataclass
+class ProductionOrderMissingItem:
+    aggregatedTotalIngredient:AggregatedTotalIngredient
+    totalQuantityInStock:float
+    totalToConsume:float
+                        
+
+@dataclass
+class ProdcutionOrderStatus:
+        status: ProdcutionOrderStatusEnum
+        supplierInvoiceDetails: list
+        productionOrderConsumes: list[ProductionOrderConsumeItem]
+        missingIngredients: list
+
+        def to_dict(self):
+            return self.__dict__
+    
+
+        def toJson(self):
+            return json.dumps(self, 
+                              default=lambda o: {o} if (isinstance(o,Decimal) or isinstance(o,float) or isinstance(o,datetime.date)) else o.__dict__, 
+                sort_keys=True, indent=4, cls=DjangoJSONEncoder)
+      
+
 
 class ProdcutionOrderService:
     def __init__(self, productionOrderId, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects) -> None:
@@ -105,7 +111,13 @@ class ProdcutionOrderService:
         for detail in productionOrderDetails:
             recipeDetails = self.rDetailsObjects.filter(recipe_id = detail.recipe.id)
             generator = [
-                AggregatedIngredient(item.ingredient.id,item.ingredient.name,item.measureUnit.id,item.measureUnit.symbol,item.quantity,detail.quantity) 
+                AggregatedIngredient(
+                item.ingredient.id,
+                item.ingredient.name,
+                item.measureUnit.id,
+                item.measureUnit.symbol,
+                item.quantity,
+                detail.quantity) 
                 for item in recipeDetails]
             for item in generator:
                 aggregated.append(item)
@@ -133,26 +145,26 @@ class ProdcutionOrderService:
     def customAggregatedTotalIngredientDecoder(self,dict):
         return namedtuple(AggregatedTotalIngredient.__name__, dict.keys())(*dict.values())
     
-    def getIngredientsFromStock(self):
+    def start(self) -> ProdcutionOrderStatus:
         aggregatedIngredients = self.calculateAggregatedIngredients()
+        print(aggregatedIngredients)
         for aggregatedIngredient in aggregatedIngredients:
-            # if there are not items should throw error
             totalToConsume = Decimal(aggregatedIngredient.total)
             poStatus = ProdcutionOrderStatus(ProdcutionOrderStatusEnum.OK,[],[],[])
            
             supplierInvoiceDetail = list(self.siDetailsObjects
                                          .annotate(quantityAvailableCalculated=F('quantity')-F('quantityConsumed'))
-                                         .filter(ingredient = aggregatedIngredient.ingredientId, quantityAvailableCalculated__gt = 0).order_by('expirationDate'))
+                                         .filter(ingredient = aggregatedIngredient.ingredientId, quantityAvailableCalculated__gt = 0)
+                                         .order_by('expirationDate'))
             totalInDetails = sum(item.quantityAvailableCalculated for item in supplierInvoiceDetail)
 
             if totalToConsume > totalInDetails:
-                poStatus.status = ProdcutionOrderStatusEnum.ERROR
+                poStatus.status = ProdcutionOrderStatusEnum.ERROR_MISSING_INGREDIENTS
                 poStatus.missingIngredients.append(
-                    {'supplierInvoiceDetail':supplierInvoiceDetail[0], 'missingQuantity': totalInDetails-totalToConsume}
+                    ProductionOrderMissingItem(aggregatedIngredient,totalInDetails,totalToConsume)
                 )
             else:
                 for detail in supplierInvoiceDetail:
-                    #print(f'{detail.id} {totalToConsume} {detail.quantityAvailable} {totalToConsume-detail.quantityAvailable}')
                     if(totalToConsume < detail.quantityAvailable):
                         detail.quantityConsumed += totalToConsume
                     else:

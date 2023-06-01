@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -108,15 +109,17 @@ class ProductionOrderView(viewsets.ModelViewSet):
         serializer = AggregatedIngredientSerializer(result, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
-    @action(detail=True, url_path='get-ingredients-stock')
-    def get_ingredients_stock(self, request, pk=None):
+    @action(detail=True, url_path='start')
+    def start(self, request, pk=None):
         result = ProdcutionOrderService(pk, 
                                         models.ProductionOrderDetail.objects, 
                                         models.RecipeDetail.objects, 
                                         models.SupplierInvoiceDetail.objects, 
-                                        models.ProductionOrderConsume.objects).getIngredientsFromStock()
+                                        models.ProductionOrderConsume.objects).start()
 
+        responseStatus = status.HTTP_404_NOT_FOUND
         if result.status == ProdcutionOrderStatusEnum.OK:
+            responseStatus = status.HTTP_202_ACCEPTED
             with transaction.atomic():
                 for siDetail in result.supplierInvoiceDetails:
                     siDetail.save()
@@ -126,9 +129,12 @@ class ProductionOrderView(viewsets.ModelViewSet):
                     supplierInvoiceDetail = models.SupplierInvoiceDetail.objects.get(id = poConsumes.supplierInvoiceDetailId),
                     quantity = poConsumes.quantityConsumed
                     )
+                productionOrder = models.ProductionOrder.objects.get(id=pk)
+                productionOrder.startedDate = timezone.now()
+                productionOrder.save()
 
         serializer = ProductionOrderStatusSerializer(result, many=False)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+        return Response(serializer.data,status=responseStatus)
         
 
 class ProductionOrderDetailView(viewsets.ModelViewSet):
