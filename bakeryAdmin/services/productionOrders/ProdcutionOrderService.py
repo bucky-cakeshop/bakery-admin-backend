@@ -55,6 +55,7 @@ class AggregatedTotalIngredient:
 class ProdcutionOrderStatusEnum(int, Enum):
     OK = 1
     ERROR_MISSING_INGREDIENTS = 2
+    ERROR_ALREADY_STARTED = 3
 
 @dataclass
 class ProductionOrderConsumeItem:
@@ -75,27 +76,56 @@ class ProductionOrderMissingItem:
     totalQuantityInStock:float
     totalToConsume:float
                         
+@dataclass
+class ResultStatus:
+    code: ProdcutionOrderStatusEnum
+    message: str
+
+    @staticmethod
+    def ofOk():
+        return ResultStatus(ProdcutionOrderStatusEnum.OK,"Success")
+
+    @staticmethod
+    def ofMissingIngredient():
+        return ResultStatus(ProdcutionOrderStatusEnum.ERROR_MISSING_INGREDIENTS,"Missed ingredients")
+            
+    @staticmethod
+    def ofAlreadyStarted():
+        return ResultStatus(ProdcutionOrderStatusEnum.ERROR_ALREADY_STARTED,"Production order already started")
+    
+    
 
 @dataclass
 class ProdcutionOrderStatus:
-        status: ProdcutionOrderStatusEnum
-        supplierInvoiceDetails: list
-        productionOrderConsumes: list[ProductionOrderConsumeItem]
-        missingIngredients: list
+    status: ResultStatus
+    supplierInvoiceDetails: list
+    productionOrderConsumes: list[ProductionOrderConsumeItem]
+    missingIngredients: list
 
-        def to_dict(self):
-            return self.__dict__
-    
+    @staticmethod
+    def ofOk():
+        return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[])
+    @staticmethod
+    def ofMissingIngredient():
+        return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[])
+    @staticmethod
+    def ofAlreadyStarted():
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[])
 
-        def toJson(self):
-            return json.dumps(self, 
-                              default=lambda o: {o} if (isinstance(o,Decimal) or isinstance(o,float) or isinstance(o,datetime.date)) else o.__dict__, 
-                sort_keys=True, indent=4, cls=DjangoJSONEncoder)
+    def to_dict(self):
+        return self.__dict__
+
+
+    def toJson(self):
+        return json.dumps(self, 
+                            default=lambda o: {o} if (isinstance(o,Decimal) or isinstance(o,float) or isinstance(o,datetime.date)) else o.__dict__, 
+            sort_keys=True, indent=4, cls=DjangoJSONEncoder)
       
 
 
 class ProdcutionOrderService:
-    def __init__(self, productionOrderId, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects) -> None:
+    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects) -> None:
+        self.poObjects = poObjects
         self.productionOrderId = productionOrderId
         self.poDetailsObjects = poDetailsObjects
         self.rDetailsObjects = rDetailsObjects
@@ -145,12 +175,18 @@ class ProdcutionOrderService:
     def customAggregatedTotalIngredientDecoder(self,dict):
         return namedtuple(AggregatedTotalIngredient.__name__, dict.keys())(*dict.values())
     
+    def canStart(self) -> tuple[ProdcutionOrderStatus, object]:
+        productionOrder = self.poObjects.get(id = self.productionOrderId)
+        result = ProdcutionOrderStatus.ofOk()
+        if(productionOrder.startedDate != None):
+            result = ProdcutionOrderStatus.ofAlreadyStarted()
+        return result, productionOrder
+
     def start(self) -> ProdcutionOrderStatus:
         aggregatedIngredients = self.calculateAggregatedIngredients()
-        print(aggregatedIngredients)
         for aggregatedIngredient in aggregatedIngredients:
             totalToConsume = Decimal(aggregatedIngredient.total)
-            poStatus = ProdcutionOrderStatus(ProdcutionOrderStatusEnum.OK,[],[],[])
+            poStatus = ProdcutionOrderStatus.ofOk()
            
             supplierInvoiceDetail = list(self.siDetailsObjects
                                          .annotate(quantityAvailableCalculated=F('quantity')-F('quantityConsumed'))
@@ -159,7 +195,7 @@ class ProdcutionOrderService:
             totalInDetails = sum(item.quantityAvailableCalculated for item in supplierInvoiceDetail)
 
             if totalToConsume > totalInDetails:
-                poStatus.status = ProdcutionOrderStatusEnum.ERROR_MISSING_INGREDIENTS
+                poStatus.status = ResultStatus.ofMissingIngredient()
                 poStatus.missingIngredients.append(
                     ProductionOrderMissingItem(aggregatedIngredient,totalInDetails,totalToConsume)
                 )

@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
 from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer
-from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum
+from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum, ProdcutionOrderStatus
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -105,37 +105,47 @@ class ProductionOrderView(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='get-aggregated-ingredients')
     def get_aggregated_ingredients(self, request, pk=None):
-        result = ProdcutionOrderService(pk,models.ProductionOrderDetail.objects, models.RecipeDetail.objects).calculateAggregatedIngredients()
+        result = ProdcutionOrderService(
+            pk,
+            models.ProductionOrderDetail.objects, 
+            models.RecipeDetail.objects,
+            models.SupplierInvoiceDetail.objects, 
+            models.ProductionOrderConsume.objects
+            ).calculateAggregatedIngredients()
         serializer = AggregatedIngredientSerializer(result, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     @action(detail=True, url_path='start')
     def start(self, request, pk=None):
-        result = ProdcutionOrderService(pk, 
+        responseStatus = status.HTTP_400_BAD_REQUEST
+        service = ProdcutionOrderService(pk,
+                                        models.ProductionOrder.objects, 
                                         models.ProductionOrderDetail.objects, 
                                         models.RecipeDetail.objects, 
                                         models.SupplierInvoiceDetail.objects, 
-                                        models.ProductionOrderConsume.objects).start()
+                                        models.ProductionOrderConsume.objects)
+        result, productionOrder = service.canStart()
 
-        responseStatus = status.HTTP_404_NOT_FOUND
-        if result.status == ProdcutionOrderStatusEnum.OK:
-            responseStatus = status.HTTP_202_ACCEPTED
-            with transaction.atomic():
-                for siDetail in result.supplierInvoiceDetails:
-                    siDetail.save()
-                for poConsumes in result.productionOrderConsumes:
-                    models.ProductionOrderConsume.objects.create(
-                    productionOrder = models.ProductionOrder.objects.get(id = poConsumes.productionOrderId),
-                    supplierInvoiceDetail = models.SupplierInvoiceDetail.objects.get(id = poConsumes.supplierInvoiceDetailId),
-                    quantity = poConsumes.quantityConsumed
-                    )
-                productionOrder = models.ProductionOrder.objects.get(id=pk)
-                productionOrder.startedDate = timezone.now()
-                productionOrder.save()
+        if(result.status.code == ProdcutionOrderStatusEnum.OK):
+            result = service.start()
+
+            responseStatus = status.HTTP_404_NOT_FOUND
+            if result.status.code == ProdcutionOrderStatusEnum.OK:
+                responseStatus = status.HTTP_202_ACCEPTED
+                with transaction.atomic():
+                    for siDetail in result.supplierInvoiceDetails:
+                        siDetail.save()
+                    for poConsumes in result.productionOrderConsumes:
+                        models.ProductionOrderConsume.objects.create(
+                        productionOrder = models.ProductionOrder.objects.get(id = poConsumes.productionOrderId),
+                        supplierInvoiceDetail = models.SupplierInvoiceDetail.objects.get(id = poConsumes.supplierInvoiceDetailId),
+                        quantity = poConsumes.quantityConsumed
+                        )
+                    productionOrder.startedDate = timezone.now()
+                    productionOrder.save()
 
         serializer = ProductionOrderStatusSerializer(result, many=False)
         return Response(serializer.data,status=responseStatus)
-        
 
 class ProductionOrderDetailView(viewsets.ModelViewSet):
     serializer_class = ProductionOrderDetailSerializer
