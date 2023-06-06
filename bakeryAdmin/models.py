@@ -122,6 +122,7 @@ class ProductionOrder(models.Model):
     deleted = models.BooleanField(default=False)
     startedDate = models.DateTimeField(null=True, blank=True)
     closedDate = models.DateTimeField(null=True, blank=True)
+    canceledDate = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.title}'

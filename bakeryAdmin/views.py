@@ -107,6 +107,7 @@ class ProductionOrderView(viewsets.ModelViewSet):
     def get_aggregated_ingredients(self, request, pk=None):
         result = ProdcutionOrderService(
             pk,
+            models.ProductionOrder.objects, 
             models.ProductionOrderDetail.objects, 
             models.RecipeDetail.objects,
             models.SupplierInvoiceDetail.objects, 
