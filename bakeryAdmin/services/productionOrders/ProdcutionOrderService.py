@@ -122,30 +122,31 @@ class ProdcutionOrderStatus:
     supplierInvoiceDetails: list
     productionOrderConsumes: list[ProductionOrderConsumeItem]
     missingIngredients: list
+    isOk:bool
 
     @staticmethod
     def ofOk():
-        return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[],True)
 
     @staticmethod
     def ofMissingIngredient():
-        return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[], False)
 
     @staticmethod
     def ofAlreadyStarted():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[], False)
 
     @staticmethod
     def ofAlreadyCanceled():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[], False)
 
     @staticmethod
     def ofAlreadyClosed():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[], False)
 
     @staticmethod
     def ofCanceledCantClose():
-        return ProdcutionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[], False)
 
     @staticmethod
     def ofShouldStart():
@@ -217,10 +218,10 @@ class ProdcutionOrderService:
         return productionOrder.startedDate != None and productionOrder.canceledDate == None and productionOrder.closedDate == None
     
     def isCanceled(self, productionOrder) -> bool:
-        productionOrder.startedDate != None and productionOrder.canceledDate != None and productionOrder.closedDate == None
+        return productionOrder.startedDate != None and productionOrder.canceledDate != None and productionOrder.closedDate == None
     
     def isClosed(self, productionOrder) -> bool:
-        productionOrder.startedDate != None and productionOrder.canceledDate == None and productionOrder.closedDate != None
+        return productionOrder.startedDate != None and productionOrder.canceledDate == None and productionOrder.closedDate != None
 
     def canStart(self) -> tuple[ProdcutionOrderStatus, object]:
         productionOrder = self.poObjects.get(id = self.productionOrderId)

@@ -6,21 +6,6 @@ from bakeryAdmin.services.productionOrders.ProdcutionOrderService import *
 from .fixtureUtilities import *
 
 class ProductionOrderServiceTest(TestCase):
-    def test_fixtures(self):
-        value = ingredients['harina']
-        print(value) #.index('harina')
-
-    @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_productionOrderDetail_mocking(self,mockPod):
-        podMock = []
-        podMock.append(models.ProductionOrderDetail(
-            productionOrder=models.ProductionOrder(title='test'),
-            recipe=models.Recipe(title='Recipe test'), 
-            quantity=10))
-        mockPod.filter.return_value = podMock
-        service = ProdcutionOrderService(1, None, mockPod, None, None, None)
-        actual = service.testUnitTesting()
-        self.assertEquals(10, actual[0].quantity)
 
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
@@ -111,7 +96,7 @@ class ProductionOrderServiceTest(TestCase):
     @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_start_canStart(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, productionOrderMock):
+    def test_start_canStart_Error(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, productionOrderMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         rdFixture = list([createRecipeDetail(id=i, quantity=3,ingredient='harina',symbol='kg') for i in range(1,2)])
         siFixture = list([createSupplierInvoiceDetail(id=i) for i in range(1,4)])
@@ -132,7 +117,49 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(len(actual.supplierInvoiceDetails), 0)
         self.assertEqual(len(actual.missingIngredients), 0)
         self.assertEqual(productionOrder.id, 1)
+    
+    def test_isCreated_ok(self):
+        poFixture = createProductionOrder()
+        service = ProdcutionOrderService(1,None, None, None, None, None)
 
+        self.assertTrue(service.isCreated(poFixture))
+        self.assertFalse(service.isStarted(poFixture))
+        self.assertFalse(service.isCanceled(poFixture))
+        self.assertFalse(service.isClosed(poFixture))
+
+    def test_isStarted_ok(self):
+        poFixture = createProductionOrder()
+        poFixture.startedDate = datetime.date(2023,6,1)
+        service = ProdcutionOrderService(1,None, None, None, None, None)
+
+        self.assertFalse(service.isCreated(poFixture))
+        self.assertTrue(service.isStarted(poFixture))
+        self.assertFalse(service.isCanceled(poFixture))
+        self.assertFalse(service.isClosed(poFixture))
+
+    def test_isCanceled_ok(self):
+        poFixture = createProductionOrder()
+        poFixture.startedDate = datetime.date(2023,6,1)
+        poFixture.canceledDate = datetime.date(2023,6,2)
+
+        service = ProdcutionOrderService(1,None, None, None, None, None)
+
+        self.assertFalse(service.isCreated(poFixture))
+        self.assertFalse(service.isStarted(poFixture))
+        self.assertTrue(service.isCanceled(poFixture))
+        self.assertFalse(service.isClosed(poFixture))
+
+    def test_isClosed_ok(self):
+        poFixture = createProductionOrder()
+        poFixture.startedDate = datetime.date(2023,6,1)
+        poFixture.closedDate = datetime.date(2023,6,2)
+        
+        service = ProdcutionOrderService(1,None, None, None, None, None)
+
+        self.assertFalse(service.isCreated(poFixture))
+        self.assertFalse(service.isStarted(poFixture))
+        self.assertFalse(service.isCanceled(poFixture))
+        self.assertTrue(service.isClosed(poFixture))
 
 
 

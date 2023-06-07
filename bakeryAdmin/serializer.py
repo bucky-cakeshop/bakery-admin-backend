@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from bakeryAdmin import models
-from bakeryAdmin.services.productionOrders.ProdcutionOrderService import ProdcutionOrderStatus, ResultStatus
+from bakeryAdmin.services.productionOrders.ProdcutionOrderService import ProdcutionOrderStatus, ProdcutionOrderStatusEnum, ResultStatus
 
 class MeasureUnitSerializer(serializers.ModelSerializer):
     class Meta:
@@ -166,6 +166,7 @@ class ProductionOrderStatusSerializer(serializers.Serializer):
     supplierInvoiceDetails = serializers.ListSerializer(child=supplierInvoiceDetailForPoSerializer())
     productionOrderConsumes = serializers.ListSerializer(child=ProductionOrderConsumeItemSerializer())
     missingIngredients = serializers.ListSerializer(child=ProductionOrderMissedItemSerializer())
+    isOk = serializers.BooleanField()
     
     class Meta:
         model = ProdcutionOrderStatus
