@@ -56,6 +56,10 @@ class ProdcutionOrderStatusEnum(int, Enum):
     OK = 1
     ERROR_MISSING_INGREDIENTS = 2
     ERROR_ALREADY_STARTED = 3
+    ERROR_ALREADY_CANCELED = 4
+    ERROR_ALREADY_CLOSED = 5
+    ERROR_CANCELED_CANT_CLOSE = 6
+    ERROR_SHOULD_START = 7
 
 @dataclass
 class ProductionOrderConsumeItem:
@@ -92,7 +96,24 @@ class ResultStatus:
     @staticmethod
     def ofAlreadyStarted():
         return ResultStatus(ProdcutionOrderStatusEnum.ERROR_ALREADY_STARTED,"Production order already started")
+
+    @staticmethod
+    def ofAlreadyCanceled():
+        return ResultStatus(ProdcutionOrderStatusEnum.ERROR_ALREADY_CANCELED,"Production order already canceled")
     
+    @staticmethod
+    def ofAlreadyClosed():
+        return ResultStatus(ProdcutionOrderStatusEnum.ERROR_ALREADY_CLOSED,"Production order already closed")
+    
+    @staticmethod
+    def ofCanceledCantClose():
+        return ResultStatus(ProdcutionOrderStatusEnum.ERROR_CANCELED_CANT_CLOSE,"Production order canceled cant close")
+
+    @staticmethod
+    def ofShouldStart():
+        return ResultStatus(ProdcutionOrderStatusEnum.ERROR_SHOULD_START,"Production order should start")
+
+
     
 
 @dataclass
@@ -105,16 +126,33 @@ class ProdcutionOrderStatus:
     @staticmethod
     def ofOk():
         return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[])
+
     @staticmethod
     def ofMissingIngredient():
         return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[])
+
     @staticmethod
     def ofAlreadyStarted():
         return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[])
 
+    @staticmethod
+    def ofAlreadyCanceled():
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[])
+
+    @staticmethod
+    def ofAlreadyClosed():
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[])
+
+    @staticmethod
+    def ofCanceledCantClose():
+        return ProdcutionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[])
+
+    @staticmethod
+    def ofShouldStart():
+        return ProdcutionOrderStatus(ResultStatus.ofShouldStart(),[],[],[])
+
     def to_dict(self):
         return self.__dict__
-
 
     def toJson(self):
         return json.dumps(self, 
@@ -131,9 +169,6 @@ class ProdcutionOrderService:
         self.rDetailsObjects = rDetailsObjects
         self.siDetailsObjects = siDetailsObjects
         self.poConsumeObjects = poConsumeObjects
-    
-    def testUnitTesting(self):
-        return  [item for item in self.poDetailsObjects.filter()]
     
     def calculateAggregatedIngredients(self) -> list[AggregatedTotalIngredient]:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
@@ -174,12 +209,65 @@ class ProdcutionOrderService:
     
     def customAggregatedTotalIngredientDecoder(self,dict):
         return namedtuple(AggregatedTotalIngredient.__name__, dict.keys())(*dict.values())
+
+    def isCreated(self, productionOrder) -> bool:
+        return productionOrder.startedDate == None and productionOrder.canceledDate == None and productionOrder.closedDate == None
+
+    def isStarted(self, productionOrder) -> bool:
+        return productionOrder.startedDate != None and productionOrder.canceledDate == None and productionOrder.closedDate == None
     
+    def isCanceled(self, productionOrder) -> bool:
+        productionOrder.startedDate != None and productionOrder.canceledDate != None and productionOrder.closedDate == None
+    
+    def isClosed(self, productionOrder) -> bool:
+        productionOrder.startedDate != None and productionOrder.canceledDate == None and productionOrder.closedDate != None
+
     def canStart(self) -> tuple[ProdcutionOrderStatus, object]:
         productionOrder = self.poObjects.get(id = self.productionOrderId)
-        result = ProdcutionOrderStatus.ofOk()
-        if(productionOrder.startedDate != None):
+        
+        if(self.isCreated(productionOrder=productionOrder) or self.isCanceled(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofOk()
+        
+        elif(self.isStarted(productionOrder=productionOrder)):
             result = ProdcutionOrderStatus.ofAlreadyStarted()
+        
+        elif(self.isClosed(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofAlreadyClosed()
+
+        return result, productionOrder
+
+    def canCancel(self) -> tuple[ProdcutionOrderStatus, object]:
+        productionOrder = self.poObjects.get(id = self.productionOrderId)
+        
+        if(self.isStarted(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofOk()
+        
+        elif(self.isCreated(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofShouldStart()
+        
+        elif(self.isClosed(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofAlreadyClosed()
+        
+        elif(self.isCanceled(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofAlreadyCanceled()
+        
+        return result, productionOrder
+
+    def canClose(self) -> tuple[ProdcutionOrderStatus, object]:
+        productionOrder = self.poObjects.get(id = self.productionOrderId)
+        
+        if(self.isStarted(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofOk()
+        
+        elif(self.isCreated(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofShouldStart()
+        
+        elif(self.isClosed(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofAlreadyClosed()
+        
+        elif(self.isCanceled(productionOrder=productionOrder)):
+            result = ProdcutionOrderStatus.ofCanceledCantClose()
+        
         return result, productionOrder
 
     def start(self) -> ProdcutionOrderStatus:
@@ -209,5 +297,12 @@ class ProdcutionOrderService:
                     poStatus.supplierInvoiceDetails.append(detail)
                     poStatus.productionOrderConsumes.append(ProductionOrderConsumeItem(self.productionOrderId,detail.id,detail.quantityConsumed))           
             return poStatus
+    
+    def cancel(self) -> ProdcutionOrderStatus:
+        poStatus = ProdcutionOrderStatus.ofOk()
+        return poStatus
 
+    def close(self) -> ProdcutionOrderStatus:
+        poStatus = ProdcutionOrderStatus.ofOk()
+        return poStatus
 

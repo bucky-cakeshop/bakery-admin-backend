@@ -143,10 +143,52 @@ class ProductionOrderView(viewsets.ModelViewSet):
                         quantity = poConsumes.quantityConsumed
                         )
                     productionOrder.startedDate = timezone.now()
+                    productionOrder.canceledDate = None
                     productionOrder.save()
 
         serializer = ProductionOrderStatusSerializer(result, many=False)
         return Response(serializer.data,status=responseStatus)
+    
+    @action(detail=True,url_path="cancel")
+    def cancel(self, request, pk=None):
+        responseStatus = status.HTTP_400_BAD_REQUEST
+        service = ProdcutionOrderService(pk,
+                                        models.ProductionOrder.objects, 
+                                        models.ProductionOrderDetail.objects, 
+                                        models.RecipeDetail.objects, 
+                                        models.SupplierInvoiceDetail.objects, 
+                                        models.ProductionOrderConsume.objects)
+        result, productionOrder = service.canCancel()
+        if result.status.code == ProdcutionOrderStatusEnum.OK:
+            responseStatus = status.HTTP_202_ACCEPTED
+
+            productionOrder.canceledDate = timezone.now()
+            productionOrder.save()
+
+
+
+        serializer = ProductionOrderStatusSerializer(result, many=False)
+        return Response(serializer.data,status=responseStatus)
+
+    @action(detail=True,url_path="close")
+    def close(self, request, pk=None):
+        responseStatus = status.HTTP_400_BAD_REQUEST
+        service = ProdcutionOrderService(pk,
+                                        models.ProductionOrder.objects, 
+                                        models.ProductionOrderDetail.objects, 
+                                        models.RecipeDetail.objects, 
+                                        models.SupplierInvoiceDetail.objects, 
+                                        models.ProductionOrderConsume.objects)
+        result, productionOrder = service.canClose()
+        if result.status.code == ProdcutionOrderStatusEnum.OK:
+            responseStatus = status.HTTP_202_ACCEPTED
+
+            productionOrder.closedDate = timezone.now()
+            productionOrder.save()
+
+        serializer = ProductionOrderStatusSerializer(result, many=False)
+        return Response(serializer.data,status=responseStatus)
+
 
 class ProductionOrderDetailView(viewsets.ModelViewSet):
     serializer_class = ProductionOrderDetailSerializer
