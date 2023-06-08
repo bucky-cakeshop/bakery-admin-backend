@@ -140,9 +140,9 @@ class AggregatedIngredientSerializer(serializers.Serializer):
         fields = '__all__'
 
 class ProductionOrderConsumeItemSerializer(serializers.Serializer):
-    productionOrderId = serializers.IntegerField()
-    supplierInvoiceDetailId = serializers.IntegerField()
-    quantityConsumed = serializers.FloatField()
+    productionOrder_id = serializers.IntegerField()
+    supplierInvoiceDetail_id = serializers.IntegerField()
+    quantity = serializers.FloatField()
 
 
 class supplierInvoiceDetailForPoSerializer(serializers.Serializer):

@@ -72,3 +72,10 @@ def createRecipeDetail(id, quantity, ingredient, symbol):
         measureUnit = measureUnits[symbol],
         quantity = quantity
     )
+
+def createProductionOrderConsume(productionOrder,supplierInvoiceDetail,quantity) -> models.ProductionOrderConsume:
+    return models.ProductionOrderConsume (
+        productionOrder =productionOrder,
+        supplierInvoiceDetail = supplierInvoiceDetail,
+        quantity = quantity
+    )

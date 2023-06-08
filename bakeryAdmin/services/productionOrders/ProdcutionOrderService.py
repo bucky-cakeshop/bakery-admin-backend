@@ -63,9 +63,9 @@ class ProdcutionOrderStatusEnum(int, Enum):
 
 @dataclass
 class ProductionOrderConsumeItem:
-    productionOrderId: int
-    supplierInvoiceDetailId: int
-    quantityConsumed: float
+    productionOrder_id: int
+    supplierInvoiceDetail_id: int
+    quantity: float
 
     def to_dict(self):
         return self.__dict__
@@ -301,6 +301,11 @@ class ProdcutionOrderService:
     
     def cancel(self) -> ProdcutionOrderStatus:
         poStatus = ProdcutionOrderStatus.ofOk()
+        poStatus.productionOrderConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
+        for poConsume in poStatus.productionOrderConsumes:
+            siDetail = self.siDetailsObjects.get(id = poConsume.supplierInvoiceDetail.id)
+            siDetail.quantityConsumed = siDetail.quantityConsumed - poConsume.quantity
+            poStatus.supplierInvoiceDetails.append(siDetail)
         return poStatus
 
     def close(self) -> ProdcutionOrderStatus:

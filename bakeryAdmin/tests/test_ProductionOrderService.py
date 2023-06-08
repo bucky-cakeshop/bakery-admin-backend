@@ -58,9 +58,9 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.supplierInvoiceDetails[0].quantityConsumed , 5)
         self.assertEqual(actual.supplierInvoiceDetails[1].quantityConsumed , 5)
         self.assertEqual(actual.supplierInvoiceDetails[2].quantityConsumed , 2)
-        self.assertEqual(actual.productionOrderConsumes[0].quantityConsumed , 5)
-        self.assertEqual(actual.productionOrderConsumes[1].quantityConsumed , 5)
-        self.assertEqual(actual.productionOrderConsumes[2].quantityConsumed , 2)
+        self.assertEqual(actual.productionOrderConsumes[0].quantity, 5)
+        self.assertEqual(actual.productionOrderConsumes[1].quantity, 5)
+        self.assertEqual(actual.productionOrderConsumes[2].quantity, 2)
 
     @patch('bakeryAdmin.models.ProductionOrder.objects')
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
@@ -118,6 +118,41 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(len(actual.missingIngredients), 0)
         self.assertEqual(productionOrder.id, 1)
     
+
+    @patch('bakeryAdmin.models.ProductionOrder.objects')
+    @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
+    @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
+    def test_cancel_ok(self, supplierInvoiceDetailMock, productionOrderConsumeMock, productionOrderMock):
+        siFixture = list([createSupplierInvoiceDetail(id=i) for i in range(1,4)])
+        poFixture = createProductionOrder()
+        poFixture.startedDate = datetime.date(2023,6,1)
+
+        siFixture[0].quantityConsumed = 5
+        siFixture[1].quantityConsumed = 5
+        siFixture[2].quantityConsumed = 2
+
+        pocFixture = []
+        pocFixture.append(createProductionOrderConsume(poFixture,siFixture[0],5))
+        pocFixture.append(createProductionOrderConsume(poFixture,siFixture[1],5))
+        pocFixture.append(createProductionOrderConsume(poFixture,siFixture[2],2))
+
+        supplierInvoiceDetailMock.get.return_value = siFixture[0]
+        productionOrderMock.get.return_value = poFixture
+        productionOrderConsumeMock.filter.return_value = [createProductionOrderConsume(poFixture,siFixture[0],5)]
+        
+        service = ProdcutionOrderService(1, productionOrderMock, None, None, supplierInvoiceDetailMock, productionOrderConsumeMock)
+        actual = service.cancel()
+        print(actual)
+
+        # self.assertEqual(actual.status.code, ProdcutionOrderStatusEnum.OK)
+        # self.assertEqual(len(actual.productionOrderConsumes) , 3)
+        # self.assertEqual(actual.supplierInvoiceDetails[0].quantityConsumed , 5)
+        # self.assertEqual(actual.supplierInvoiceDetails[1].quantityConsumed , 5)
+        # self.assertEqual(actual.supplierInvoiceDetails[2].quantityConsumed , 2)
+        # self.assertEqual(actual.productionOrderConsumes[0].quantity, 5)
+        # self.assertEqual(actual.productionOrderConsumes[1].quantity, 5)
+        # self.assertEqual(actual.productionOrderConsumes[2].quantity, 2)
+
     def test_isCreated_ok(self):
         poFixture = createProductionOrder()
         service = ProdcutionOrderService(1,None, None, None, None, None)

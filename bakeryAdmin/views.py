@@ -134,28 +134,28 @@ class ProductionOrderView(viewsets.ModelViewSet):
         result, productionOrder = service.canStart()
 
         if(result.status.code == ProdcutionOrderStatusEnum.OK):
-            responseStatus = status.HTTP_202_ACCEPTED
-            productionOrder.startedDate = timezone.now()
-            productionOrder.canceledDate = None
-            productionOrder.save()
+            # responseStatus = status.HTTP_202_ACCEPTED
+            # productionOrder.startedDate = timezone.now()
+            # productionOrder.canceledDate = None
+            # productionOrder.save()
             
-            # result = service.start()
+            result = service.start()
 
-            # responseStatus = status.HTTP_404_NOT_FOUND
-            # if result.status.code == ProdcutionOrderStatusEnum.OK:
-            #     responseStatus = status.HTTP_202_ACCEPTED
-            #     with transaction.atomic():
-            #         for siDetail in result.supplierInvoiceDetails:
-            #             siDetail.save()
-            #         for poConsumes in result.productionOrderConsumes:
-            #             models.ProductionOrderConsume.objects.create(
-            #             productionOrder = models.ProductionOrder.objects.get(id = poConsumes.productionOrderId),
-            #             supplierInvoiceDetail = models.SupplierInvoiceDetail.objects.get(id = poConsumes.supplierInvoiceDetailId),
-            #             quantity = poConsumes.quantityConsumed
-            #             )
-            #         productionOrder.startedDate = timezone.now()
-            #         productionOrder.canceledDate = None
-            #         productionOrder.save()
+            responseStatus = status.HTTP_404_NOT_FOUND
+            if result.status.code == ProdcutionOrderStatusEnum.OK:
+                responseStatus = status.HTTP_202_ACCEPTED
+                with transaction.atomic():
+                    for siDetail in result.supplierInvoiceDetails:
+                        siDetail.save()
+                    for poConsumes in result.productionOrderConsumes:
+                        models.ProductionOrderConsume.objects.create(
+                        productionOrder = models.ProductionOrder.objects.get(id = poConsumes.productionOrder_id),
+                        supplierInvoiceDetail = models.SupplierInvoiceDetail.objects.get(id = poConsumes.supplierInvoiceDetail_id),
+                        quantity = poConsumes.quantity
+                        )
+                    productionOrder.startedDate = timezone.now()
+                    productionOrder.canceledDate = None
+                    productionOrder.save()
 
         serializer = ProductionOrderStatusSerializer(result, many=False)
         return Response(serializer.data,status=responseStatus)
@@ -172,11 +172,14 @@ class ProductionOrderView(viewsets.ModelViewSet):
         result, productionOrder = service.canCancel()
         if result.status.code == ProdcutionOrderStatusEnum.OK:
             responseStatus = status.HTTP_202_ACCEPTED
-
-            productionOrder.canceledDate = timezone.now()
-            productionOrder.save()
-
-
+            result = service.cancel()
+            with transaction.atomic():
+                for siDetail in result.supplierInvoiceDetails:
+                    siDetail.save()
+                for poConsumes in result.productionOrderConsumes:
+                    poConsumes.delete()
+                productionOrder.canceledDate = timezone.now()
+                productionOrder.save()
 
         serializer = ProductionOrderStatusSerializer(result, many=False)
         return Response(serializer.data,status=responseStatus)
