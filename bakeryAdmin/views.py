@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
-from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer
+from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderConsumeItemSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer
 from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum, ProdcutionOrderStatus
 import json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -89,6 +89,12 @@ class ProductionOrderView(viewsets.ModelViewSet):
     def get_productionOrder_details(self, request, pk=None):
         productionOrder = models.ProductionOrderDetail.objects.filter(productionOrder_id = pk)
         serializer = ProductionOrderDetailSerializer(productionOrder, many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    @action(detail=True,url_path="consumes")
+    def consumes(self, request, pk=None):
+        consumes = models.ProductionOrderConsume.objects.filter(productionOrder_id = pk)
+        serializer = ProductionOrderConsumeSerializer(consumes, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     @action(detail=True, url_path='get-ingredients')
@@ -193,7 +199,6 @@ class ProductionOrderView(viewsets.ModelViewSet):
 
         serializer = ProductionOrderStatusSerializer(result, many=False)
         return Response(serializer.data,status=responseStatus)
-
 
 class ProductionOrderDetailView(viewsets.ModelViewSet):
     serializer_class = ProductionOrderDetailSerializer

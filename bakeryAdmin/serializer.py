@@ -119,6 +119,16 @@ class ProductionOrderDetailSerializer(serializers.ModelSerializer):
         model = models.ProductionOrderDetail
         fields = '__all__'
 
+class ProductionOrderConsumeSerializer(serializers.ModelSerializer):
+    productionOrder = serializers.PrimaryKeyRelatedField(queryset=models.ProductionOrder.objects.all()) 
+    supplierInvoiceDetail = SupplierInvoiceDetailSerializer()
+    
+    quantity = serializers.FloatField()
+
+    class Meta:
+        model = models.ProductionOrderConsume
+        fields = '__all__'
+
 class AggregatedIngredientSerializer(serializers.Serializer):
     ingredientId = serializers.IntegerField()
     ingredientName = serializers.CharField()
@@ -133,6 +143,7 @@ class ProductionOrderConsumeItemSerializer(serializers.Serializer):
     productionOrderId = serializers.IntegerField()
     supplierInvoiceDetailId = serializers.IntegerField()
     quantityConsumed = serializers.FloatField()
+
 
 class supplierInvoiceDetailForPoSerializer(serializers.Serializer):
     id = serializers.IntegerField()
