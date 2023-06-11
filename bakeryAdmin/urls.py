@@ -15,6 +15,7 @@ router.register(r'supplier-invoice', views.SupplierInvoiceView)
 router.register(r'supplier-invoice-detail', views.SupplierInvoiceDetailView)
 router.register(r'production-order', views.ProductionOrderView)
 router.register(r'production-order-detail', views.ProductionOrderDetailView)
+router.register(r'product', views.ProductView)
 
 
 urlpatterns = [

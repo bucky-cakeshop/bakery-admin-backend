@@ -142,4 +142,13 @@ class ProductionOrderConsume(models.Model):
     quantity = models.DecimalField(max_digits=5,decimal_places=2)
     consumeDate = models.DateTimeField(auto_now_add=True)
 
+class Product(models.Model):
+    name = models.CharField()
+    description = models.TextField(blank=True)
+    recipe = models.OneToOneField(Recipe, on_delete=models.CASCADE,related_name='product_recipe')
+    quantityByRecipe = models.DecimalField(max_digits=5,decimal_places=2)
+    isForSell = models.BooleanField(default=False)
+
+
+
 

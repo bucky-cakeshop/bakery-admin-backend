@@ -182,3 +182,8 @@ class ProductionOrderStatusSerializer(serializers.Serializer):
     class Meta:
         model = ProdcutionOrderStatus
         fields = '__all__'
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Product
+        fields = '__all__'

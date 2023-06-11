@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
-from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderConsumeItemSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer
+from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer, ProductSerializer
 from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum, ProdcutionOrderStatus
 import json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -42,6 +42,14 @@ class RecipeView(viewsets.ModelViewSet):
             print(repr(ing))
         
         return Response({"message":"done"},status=status.HTTP_200_OK)
+    
+    @action(detail=False, url_path='available-recipes')
+    def get_available_recipes(self, request, pk=None):
+        assignedRecipes = [product.recipe_id for product in models.Product.objects.all()]
+        availableRecipes = models.Recipe.objects.all().exclude(id__in = assignedRecipes)
+
+        serializer = RecipeSerializer(availableRecipes, many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
 
 class RecipeDetailView(viewsets.ModelViewSet):
@@ -206,3 +214,8 @@ class ProductionOrderView(viewsets.ModelViewSet):
 class ProductionOrderDetailView(viewsets.ModelViewSet):
     serializer_class = ProductionOrderDetailSerializer
     queryset = models.ProductionOrderDetail.objects.all()
+
+class ProductView(viewsets.ModelViewSet):
+    serializer_class = ProductSerializer
+    queryset = models.Product.objects.all()
+
