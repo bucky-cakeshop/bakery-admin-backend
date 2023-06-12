@@ -45,6 +45,29 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         model = models.RecipeDetail
         fields = '__all__'
 
+class RecipeDetailProductSerializer(serializers.ModelSerializer):
+    recipe = serializers.PrimaryKeyRelatedField(queryset=models.Recipe.objects.all()) 
+    recipe_object = serializers.SerializerMethodField()
+
+    measureUnit = serializers.PrimaryKeyRelatedField(queryset=models.MeasureUnit.objects.all()) 
+    measureUnit_object = serializers.SerializerMethodField()
+
+    product = serializers.PrimaryKeyRelatedField(queryset=models.Product.objects.all()) 
+    product_object = serializers.SerializerMethodField()
+
+    def get_recipe_object(self, obj):
+        return {'id': obj.recipe.id, 'name': obj.recipe.title, 'symbol': obj.measureUnit.symbol}
+
+    def get_measureUnit_object(self, obj):
+        return {'id': obj.measureUnit.id, 'name': obj.measureUnit.title, 'symbol': obj.measureUnit.symbol}
+
+    def get_product_object(self, obj):
+        return {'id': obj.product.id, 'name': obj.product.name}
+
+    class Meta:
+        model = models.RecipeDetailProduct
+        fields = '__all__'
+
 class MakeSerializer(serializers.ModelSerializer):  
     class Meta:
         model = models.Make

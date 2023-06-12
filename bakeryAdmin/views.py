@@ -4,10 +4,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
-from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer, ProductSerializer
+from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer, ProductSerializer,RecipeDetailProductSerializer
 from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum, ProdcutionOrderStatus
-import json
-from django.core.serializers.json import DjangoJSONEncoder
 
 # Create your views here.
 class MeasureUnitView(viewsets.ModelViewSet):
@@ -28,10 +26,16 @@ class RecipeView(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='get-details')
     def get_recipe_details(self, request, pk=None):
-        recipe = models.RecipeDetail.objects.filter(recipe_id = pk)
-        serializer = RecipeDetailSerializer(recipe, many=True)
+        recipeDetails = models.RecipeDetail.objects.filter(recipe_id = pk)
+        serializer = RecipeDetailSerializer(recipeDetails, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
-    
+
+    @action(detail=True, url_path='get-details-products')
+    def get_recipe_details_product(self, request, pk=None):
+        recipeDetailsProduct = models.RecipeDetailProduct.objects.filter(recipe_id = pk)
+        serializer = RecipeDetailProductSerializer(recipeDetailsProduct, many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
     @action(detail=True, url_path='calculate-total')
     def calculate_total(self, request, pk=None):
         details = list(models.RecipeDetail.objects.filter(recipe_id = pk))
@@ -55,6 +59,10 @@ class RecipeView(viewsets.ModelViewSet):
 class RecipeDetailView(viewsets.ModelViewSet):
     serializer_class = RecipeDetailSerializer
     queryset = models.RecipeDetail.objects.all()
+
+class RecipeDetailProductView(viewsets.ModelViewSet):
+    serializer_class = RecipeDetailProductSerializer
+    queryset = models.RecipeDetailProduct.objects.all()
 
 class SupplierView(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer

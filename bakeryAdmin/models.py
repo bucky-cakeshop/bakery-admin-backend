@@ -50,6 +50,28 @@ class RecipeDetail(models.Model):
     def __str__(self):
         return f'{self.recipe.title} {self.ingredient.name} {self.quantity} {self.measureUnit.symbol}'
 
+class Product(models.Model):
+    name = models.CharField()
+    description = models.TextField(blank=True)
+    recipe = models.OneToOneField(Recipe, on_delete=models.CASCADE,related_name='product_recipe')
+    quantityByRecipe = models.DecimalField(max_digits=5,decimal_places=2)
+    isForSell = models.BooleanField(default=False)
+
+class RecipeDetailProduct(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,related_name='RecipeDetail_Recipe')
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, related_name="RecipeDetail_Product")
+    measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.DO_NOTHING)
+    quantity = models.DecimalField(max_digits=5,decimal_places=2)
+
+    def save(self, *args, **kwargs):
+        if self.product.recipe.pk == self.recipe.pk:
+            raise ValidationError("Recipe from detail can't be the same that product recipe.")
+        return super().save(*args, **kwargs)
+
+    
+    def __str__(self):
+        return f'{self.recipe.title} {self.product.name} {self.quantity} {self.measureUnit.symbol}'
+
 
 class Supplier(models.Model):
     name = models.CharField(max_length=200)
@@ -142,12 +164,6 @@ class ProductionOrderConsume(models.Model):
     quantity = models.DecimalField(max_digits=5,decimal_places=2)
     consumeDate = models.DateTimeField(auto_now_add=True)
 
-class Product(models.Model):
-    name = models.CharField()
-    description = models.TextField(blank=True)
-    recipe = models.OneToOneField(Recipe, on_delete=models.CASCADE,related_name='product_recipe')
-    quantityByRecipe = models.DecimalField(max_digits=5,decimal_places=2)
-    isForSell = models.BooleanField(default=False)
 
 
 
