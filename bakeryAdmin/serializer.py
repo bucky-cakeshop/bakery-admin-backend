@@ -64,6 +64,7 @@ class RecipeDetailProductSerializer(serializers.ModelSerializer):
     def get_product_object(self, obj):
         return {'id': obj.product.id, 'name': obj.product.name}
 
+    
     class Meta:
         model = models.RecipeDetailProduct
         fields = '__all__'
@@ -207,6 +208,11 @@ class ProductionOrderStatusSerializer(serializers.Serializer):
         fields = '__all__'
 
 class ProductSerializer(serializers.ModelSerializer):
+    recipe_object = serializers.SerializerMethodField()
+
+    def get_recipe_object(self, obj):
+        return {'id': obj.recipe.id, 'title': obj.recipe.title}
+
     class Meta:
         model = models.Product
         fields = '__all__'

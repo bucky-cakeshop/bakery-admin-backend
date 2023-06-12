@@ -63,6 +63,7 @@ class RecipeDetailView(viewsets.ModelViewSet):
 class RecipeDetailProductView(viewsets.ModelViewSet):
     serializer_class = RecipeDetailProductSerializer
     queryset = models.RecipeDetailProduct.objects.all()
+    
 
 class SupplierView(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer

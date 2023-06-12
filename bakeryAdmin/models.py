@@ -3,6 +3,7 @@ from datetime import datetime
 from django.core.validators import EmailValidator
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.core.exceptions import BadRequest
 
 # Create your models here.
 class MeasureUnit(models.Model):
@@ -65,7 +66,7 @@ class RecipeDetailProduct(models.Model):
 
     def save(self, *args, **kwargs):
         if self.product.recipe.pk == self.recipe.pk:
-            raise ValidationError("Recipe from detail can't be the same that product recipe.")
+            raise BadRequest({"message":"Recipe from detail can't be the same that product recipe."})
         return super().save(*args, **kwargs)
 
     
