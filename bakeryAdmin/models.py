@@ -165,6 +165,16 @@ class ProductionOrderConsume(models.Model):
     quantity = models.DecimalField(max_digits=5,decimal_places=2)
     consumeDate = models.DateTimeField(auto_now_add=True)
 
+class ProductStock(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product_productStock')
+    quantity = models.DecimalField(max_digits=5,decimal_places=2)
+    quantityConsumed = models.DecimalField(max_digits=5,decimal_places=2)
+    isForSell = models.BooleanField(default=False)
+    batch = models.CharField(max_length=200)
+    expirationDate = models.DateField()
+    unitCostPrice = models.DecimalField(max_digits=5,decimal_places=2)
+
+
 
 
 

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
-from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer, ProductSerializer,RecipeDetailProductSerializer
+from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductStockSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer, ProductSerializer,RecipeDetailProductSerializer
 from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum, ProdcutionOrderStatus
 
 # Create your views here.
@@ -228,3 +228,6 @@ class ProductView(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     queryset = models.Product.objects.all()
 
+class ProductStockView(viewsets.ModelViewSet):
+    serializer_class = ProductStockSerializer
+    queryset = models.ProductStock.objects.all()

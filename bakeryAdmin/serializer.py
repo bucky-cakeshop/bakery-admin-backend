@@ -216,3 +216,10 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Product
         fields = '__all__'
+
+class ProductStockSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(queryset=models.Product.objects.all()) 
+
+    class Meta:
+        model = models.ProductStock
+        fields = '__all__'
