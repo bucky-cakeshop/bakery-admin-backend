@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from collections import namedtuple
 from decimal import Decimal
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import F, Sum
+from django.db.models import F
+from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
+
+from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
 
 class AggregatedIngredient:
     def __init__(self, ingredientId,ingredientName,measureUnitId,measureUnitSymbol,quantity, recipeQuantity):
@@ -163,13 +166,14 @@ class ProdcutionOrderStatus:
 
 
 class ProdcutionOrderService:
-    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects) -> None:
+    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects, rDetailsProductObjects) -> None:
         self.poObjects = poObjects
         self.productionOrderId = productionOrderId
         self.poDetailsObjects = poDetailsObjects
         self.rDetailsObjects = rDetailsObjects
         self.siDetailsObjects = siDetailsObjects
         self.poConsumeObjects = poConsumeObjects
+        self.rDetailsProductObjects = rDetailsProductObjects
     
     def calculateAggregatedIngredients(self) -> list[AggregatedTotalIngredient]:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
@@ -208,6 +212,44 @@ class ProdcutionOrderService:
 
         return aggregatedTotals
     
+    def calculateAggregatedProducts(self) -> list[AggregatedTotalProduct]:
+        productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
+        aggregated = []
+        for detail in productionOrderDetails:
+            recipeDetailsProduct = self.rDetailsProductObjects.filter(recipe_id = detail.recipe.id)
+            generator = [
+                AggregatedProduct(
+                item.product.id,
+                item.product.name,
+                item.measureUnit.id,
+                item.measureUnit.symbol,
+                item.quantity,
+                detail.quantity) 
+                for item in recipeDetailsProduct]
+            for item in generator:
+                aggregated.append(item)
+
+        sorted_aggregated = sorted(aggregated, key=lambda AggregatedProduct:AggregatedProduct.productId )
+        aggregatedTotals = [
+            AggregatedTotalProduct(
+            key['prodId'],
+            key['prodName'],
+            key['prodUnitId'],
+            key['prodUnitSymbol'],
+            sum(item.total for item in list(result))
+            )
+            for key, result in groupby(sorted_aggregated,
+                                       key = lambda AggregatedProduct:{
+                                           'prodId':AggregatedProduct.productId,
+                                           'prodName':AggregatedProduct.productName,
+                                           'prodUnitId':AggregatedProduct.measureUnitId,
+                                           'prodUnitSymbol': AggregatedProduct.measureUnitSymbol
+                                           } )
+            ]
+
+        return aggregatedTotals
+
+
     def customAggregatedTotalIngredientDecoder(self,dict):
         return namedtuple(AggregatedTotalIngredient.__name__, dict.keys())(*dict.values())
 
