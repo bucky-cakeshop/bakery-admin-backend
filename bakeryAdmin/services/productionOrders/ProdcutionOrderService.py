@@ -10,6 +10,8 @@ from django.db.models import F
 from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
 
 from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
+from bakeryAdmin.domain.models.production.ProductionOrderConsumeProductItem import ProductionOrderConsumeProductItem
+from bakeryAdmin.domain.models.production.ProductionOrderMissingProductItem import ProductionOrderMissingProductItem
 
 class AggregatedIngredient:
     def __init__(self, ingredientId,ingredientName,measureUnitId,measureUnitSymbol,quantity, recipeQuantity):
@@ -63,6 +65,7 @@ class ProdcutionOrderStatusEnum(int, Enum):
     ERROR_ALREADY_CLOSED = 5
     ERROR_CANCELED_CANT_CLOSE = 6
     ERROR_SHOULD_START = 7
+    ERROR_MISSING_PRODUCTS = 8
 
 @dataclass
 class ProductionOrderConsumeItem:
@@ -115,6 +118,11 @@ class ResultStatus:
     @staticmethod
     def ofShouldStart():
         return ResultStatus(ProdcutionOrderStatusEnum.ERROR_SHOULD_START,"Production order should start")
+    
+    @staticmethod
+    def ofMissingProduct():
+        return ResultStatus(ProdcutionOrderStatusEnum.ERROR_MISSING_PRODUCTS,"Missed products")
+
 
 
     
@@ -126,34 +134,42 @@ class ProdcutionOrderStatus:
     productionOrderConsumes: list[ProductionOrderConsumeItem]
     missingIngredients: list
     isOk:bool
+    productStock: list
+    productionOrderConsumesProduct: list[ProductionOrderConsumeProductItem]
+    missingProducts: list
+
 
     @staticmethod
     def ofOk():
-        return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[],True)
+        return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[],True,[],[],[])
 
     @staticmethod
     def ofMissingIngredient():
-        return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[], False)
+        return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[], False,[],[],[])
+
+    @staticmethod
+    def ofMissingProduct():
+        return ProdcutionOrderStatus(ResultStatus.ofMissingProduct(),[],[],[], False,[],[],[])
 
     @staticmethod
     def ofAlreadyStarted():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[], False)
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[], False,[],[],[])
 
     @staticmethod
     def ofAlreadyCanceled():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[], False)
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[], False,[],[],[])
 
     @staticmethod
     def ofAlreadyClosed():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[], False)
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[], False,[],[],[])
 
     @staticmethod
     def ofCanceledCantClose():
-        return ProdcutionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[], False)
+        return ProdcutionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[], False,[],[],[])
 
     @staticmethod
     def ofShouldStart():
-        return ProdcutionOrderStatus(ResultStatus.ofShouldStart(),[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofShouldStart(),[],[],[], False,[],[],[])
 
     def to_dict(self):
         return self.__dict__
@@ -166,7 +182,7 @@ class ProdcutionOrderStatus:
 
 
 class ProdcutionOrderService:
-    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects, rDetailsProductObjects) -> None:
+    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects, rDetailsProductObjects, pStockObjects) -> None:
         self.poObjects = poObjects
         self.productionOrderId = productionOrderId
         self.poDetailsObjects = poDetailsObjects
@@ -174,6 +190,7 @@ class ProdcutionOrderService:
         self.siDetailsObjects = siDetailsObjects
         self.poConsumeObjects = poConsumeObjects
         self.rDetailsProductObjects = rDetailsProductObjects
+        self.pStockObjects = pStockObjects
     
     def calculateAggregatedIngredients(self) -> list[AggregatedTotalIngredient]:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
@@ -314,11 +331,18 @@ class ProdcutionOrderService:
         return result, productionOrder
 
     def start(self) -> ProdcutionOrderStatus:
+        poStatus = ProdcutionOrderStatus.ofOk()
         aggregatedIngredients = self.calculateAggregatedIngredients()
+        aggregatedProducts = self.calculateAggregatedProducts()
+        
+        self.calculateConsumedIngredients(aggregatedIngredients, poStatus)
+        self.calculateConsumedProducts(aggregatedProducts, poStatus)
+        return poStatus
+
+    def calculateConsumedIngredients(self, aggregatedIngredients, poStatus):
         for aggregatedIngredient in aggregatedIngredients:
             totalToConsume = Decimal(aggregatedIngredient.total)
-            poStatus = ProdcutionOrderStatus.ofOk()
-           
+                       
             supplierInvoiceDetail = list(self.siDetailsObjects
                                          .annotate(quantityAvailableCalculated=F('quantity')-F('quantityConsumed'))
                                          .filter(ingredient = aggregatedIngredient.ingredientId, quantityAvailableCalculated__gt = 0)
@@ -340,7 +364,34 @@ class ProdcutionOrderService:
                     poStatus.supplierInvoiceDetails.append(detail)
                     poStatus.productionOrderConsumes.append(ProductionOrderConsumeItem(self.productionOrderId,detail.id,detail.quantityConsumed))           
             return poStatus
-    
+
+    def calculateConsumedProducts(self, aggregatedProducts, poStatus):
+        for aggregatedProduct in aggregatedProducts:
+            totalToConsume = Decimal(aggregatedProduct.total)
+                       
+            productStock = list(self.pStockObjects
+                                         .annotate(quantityAvailableCalculated=F('quantity')-F('quantityConsumed'))
+                                         .filter(product = aggregatedProduct.productId, quantityAvailableCalculated__gt = 0)
+                                         .order_by('expirationDate'))
+            totalInDetails = sum(item.quantityAvailableCalculated for item in productStock)
+
+            if totalToConsume > totalInDetails:
+                poStatus.status = ResultStatus.ofMissingProduct()
+                poStatus.missingProducts.append(
+                    ProductionOrderMissingProductItem(aggregatedProduct,totalInDetails,totalToConsume)
+                )
+            else:
+                for detail in productStock:
+                    if(totalToConsume < detail.quantityAvailable):
+                        detail.quantityConsumed += totalToConsume
+                    else:
+                        detail.quantityConsumed += detail.quantityAvailable
+                    totalToConsume -= detail.quantityConsumed
+                    poStatus.productStock.append(detail)
+                    poStatus.productionOrderConsumesProduct.append(ProductionOrderConsumeItem(self.productionOrderId,detail.id,detail.quantityConsumed))           
+            return poStatus
+
+
     def cancel(self) -> ProdcutionOrderStatus:
         poStatus = ProdcutionOrderStatus.ofOk()
         poStatus.productionOrderConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
