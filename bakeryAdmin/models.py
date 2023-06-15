@@ -167,14 +167,14 @@ class ProductionOrderConsume(models.Model):
 
 class ProductStock(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product_productStock')
-    measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.DO_NOTHING)
+    measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.DO_NOTHING, default=1)
     quantity = models.DecimalField(max_digits=5,decimal_places=2)
     quantityConsumed = models.DecimalField(max_digits=5,decimal_places=2)
     isForSell = models.BooleanField(default=False)
     batch = models.CharField(max_length=200)
     expirationDate = models.DateField()
     unitCostPrice = models.DecimalField(max_digits=5,decimal_places=2)
-    unitSellPrice = models.DecimalField(max_digits=5,decimal_places=2)
+    unitSellPrice = models.DecimalField(max_digits=5,decimal_places=2, default=0)
     
     @property
     def quantityAvailable(self):
