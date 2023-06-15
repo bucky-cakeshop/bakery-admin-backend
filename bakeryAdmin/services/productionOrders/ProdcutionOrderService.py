@@ -133,43 +133,45 @@ class ProdcutionOrderStatus:
     supplierInvoiceDetails: list
     productionOrderConsumes: list[ProductionOrderConsumeItem]
     missingIngredients: list
-    isOk:bool
     productStock: list
     productionOrderConsumesProduct: list[ProductionOrderConsumeProductItem]
     missingProducts: list
 
+    @property
+    def isOk(self):
+        return len(self.missingIngredients) <= 0 and len(self.missingProducts) <= 0
 
     @staticmethod
     def ofOk():
-        return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[],True,[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[],[],[],[])
 
     @staticmethod
     def ofMissingIngredient():
-        return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[], False,[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[],[],[],[])
 
     @staticmethod
     def ofMissingProduct():
-        return ProdcutionOrderStatus(ResultStatus.ofMissingProduct(),[],[],[], False,[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofMissingProduct(),[],[],[],[],[],[])
 
     @staticmethod
     def ofAlreadyStarted():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[], False,[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[],[],[],[])
 
     @staticmethod
     def ofAlreadyCanceled():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[], False,[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[],[],[],[])
 
     @staticmethod
     def ofAlreadyClosed():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[], False,[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[],[],[],[])
 
     @staticmethod
     def ofCanceledCantClose():
-        return ProdcutionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[], False,[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[],[],[],[])
 
     @staticmethod
     def ofShouldStart():
-        return ProdcutionOrderStatus(ResultStatus.ofShouldStart(),[],[],[], False,[],[],[])
+        return ProdcutionOrderStatus(ResultStatus.ofShouldStart(),[],[],[],[],[],[])
 
     def to_dict(self):
         return self.__dict__
@@ -362,7 +364,8 @@ class ProdcutionOrderService:
                         detail.quantityConsumed += detail.quantityAvailable
                     totalToConsume -= detail.quantityConsumed
                     poStatus.supplierInvoiceDetails.append(detail)
-                    poStatus.productionOrderConsumes.append(ProductionOrderConsumeItem(self.productionOrderId,detail.id,detail.quantityConsumed))           
+                    poStatus.productionOrderConsumes.append(ProductionOrderConsumeItem(self.productionOrderId,detail.id,detail.quantityConsumed))      
+            
             return poStatus
 
     def calculateConsumedProducts(self, aggregatedProducts, poStatus):

@@ -163,9 +163,24 @@ class AggregatedIngredientSerializer(serializers.Serializer):
     class Meta:
         fields = '__all__'
 
-class ProductionOrderConsumeItemSerializer(serializers.Serializer):
+class AggregatedProductSerializer(serializers.Serializer):
+    productId = serializers.IntegerField()
+    productName = serializers.CharField()
+    measureUnitId = serializers.IntegerField()
+    measureUnitSymbol = serializers.CharField()
+    total = serializers.DecimalField(max_digits=5,decimal_places=2)
+
+    class Meta:
+        fields = '__all__'
+
+class ProductionOrderConsumeInredientSerializer(serializers.Serializer):
     productionOrder_id = serializers.IntegerField()
     supplierInvoiceDetail_id = serializers.IntegerField()
+    quantity = serializers.FloatField()
+
+class ProductionOrderConsumeProductSerializer(serializers.Serializer):
+    productionOrder_id = serializers.IntegerField()
+    productStock_id = serializers.IntegerField()
     quantity = serializers.FloatField()
 
 
@@ -182,8 +197,26 @@ class supplierInvoiceDetailForPoSerializer(serializers.Serializer):
     def get_ingredient(self, obj):
         return {'id': obj.ingredient.id, 'name': obj.ingredient.name}
 
-class ProductionOrderMissedItemSerializer(serializers.Serializer):
+class ProductStockForPoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    product = serializers.SerializerMethodField()
+    measureUnit = serializers.SerializerMethodField()
+    quantity = serializers.FloatField()
+    quantityConsumed = serializers.FloatField()
+
+    def get_measureUnit(self, obj):
+        return {'id': obj.measureUnit.id, 'title': obj.measureUnit.title, 'symbol': obj.measureUnit.symbol}
+
+    def get_product(self, obj):
+        return {'id': obj.product.id, 'name': obj.product.name}
+
+class ProductionOrderMissedIngredientSerializer(serializers.Serializer):
     aggregatedTotalIngredient = AggregatedIngredientSerializer()
+    totalQuantityInStock = serializers.FloatField()
+    totalToConsume = serializers.FloatField()
+
+class ProductionOrderMissedProductSerializer(serializers.Serializer):
+    aggregatedTotalProduct = AggregatedProductSerializer()
     totalQuantityInStock = serializers.FloatField()
     totalToConsume = serializers.FloatField()
 
@@ -199,9 +232,12 @@ class ResultStatusSerializer(serializers.Serializer):
 class ProductionOrderStatusSerializer(serializers.Serializer):
     status = ResultStatusSerializer()
     supplierInvoiceDetails = serializers.ListSerializer(child=supplierInvoiceDetailForPoSerializer())
-    productionOrderConsumes = serializers.ListSerializer(child=ProductionOrderConsumeItemSerializer())
-    missingIngredients = serializers.ListSerializer(child=ProductionOrderMissedItemSerializer())
+    productionOrderConsumes = serializers.ListSerializer(child=ProductionOrderConsumeInredientSerializer())
+    missingIngredients = serializers.ListSerializer(child=ProductionOrderMissedIngredientSerializer())
     isOk = serializers.BooleanField()
+    productStock = serializers.ListSerializer(child=ProductStockForPoSerializer())
+    productionOrderConsumesProduct = serializers.ListSerializer(child=ProductionOrderConsumeInredientSerializer())
+    missingProducts = serializers.ListSerializer(child=ProductionOrderMissedProductSerializer())
     
     class Meta:
         model = ProdcutionOrderStatus

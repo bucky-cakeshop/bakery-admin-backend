@@ -134,7 +134,9 @@ class ProductionOrderView(viewsets.ModelViewSet):
             models.ProductionOrderDetail.objects, 
             models.RecipeDetail.objects,
             models.SupplierInvoiceDetail.objects, 
-            models.ProductionOrderConsume.objects
+            models.ProductionOrderConsume.objects,
+            models.RecipeDetailProduct.objects,
+            models.ProductStock.objects
             ).calculateAggregatedIngredients()
         serializer = AggregatedIngredientSerializer(result, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -147,7 +149,10 @@ class ProductionOrderView(viewsets.ModelViewSet):
                                         models.ProductionOrderDetail.objects, 
                                         models.RecipeDetail.objects, 
                                         models.SupplierInvoiceDetail.objects, 
-                                        models.ProductionOrderConsume.objects)
+                                        models.ProductionOrderConsume.objects,
+                                        models.RecipeDetailProduct.objects,
+                                        models.ProductStock.objects
+                                        )
         result, productionOrder = service.canStart()
 
         if(result.status.code == ProdcutionOrderStatusEnum.OK):
