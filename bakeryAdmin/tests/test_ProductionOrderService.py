@@ -63,35 +63,31 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(12,actual[0].total)
 
 
+    @patch('bakeryAdmin.models.ProductStock.objects')
     @patch('bakeryAdmin.models.RecipeDetailProduct.objects')
     @patch('bakeryAdmin.models.ProductionOrder.objects')
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
     @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_start_ok(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, productionOrderMock, recipeDetailProductMock):
+    def test_start_ok(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, productionOrderMock, recipeDetailProductMock, productStockMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         rdFixture = list([createRecipeDetail(id=i, quantity=3,ingredient='harina',symbol='kg') for i in range(1,2)])
-        siFixture = list([createSupplierInvoiceDetail(id=i) for i in range(1,4)])
+        sidFixture = list([createSupplierInvoiceDetail(id=i) for i in range(1,4)])
         poFixture = createProductionOrder()
-        rdpFixture = []
-        rdpFixture.append(models.RecipeDetailProduct(
-            id=10,
-            recipe=models.Recipe(id=1,title='Recipe test'), 
-            product = models.Product(id=1,name='masa base'),
-            measureUnit = models.MeasureUnit(id=1,title='unitario',symbol='u.'),
-            quantity = 3
-        ))
-
+        rdpFixture = list([createRecipeDetailProduct(id=i,recipe=rdFixture[0].recipe, quantity=1,product='masa base tarta',symbol='kg') for i in range(1,2)])
+        psFixture = list([createProductStock(id=i) for i in range(1,2)])
 
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = rdFixture
-        supplierInvoiceDetailMock.annotate.return_value.filter.return_value.order_by.return_value = siFixture
+        supplierInvoiceDetailMock.annotate.return_value.filter.return_value.order_by.return_value = sidFixture
+        productStockMock.annotate.return_value.filter.return_value.order_by.return_value = psFixture
         productionOrderMock.get.return_value = poFixture
         recipeDetailProductMock.filter.return_value = rdpFixture
         
-        service = ProdcutionOrderService(1, productionOrderMock, productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, recipeDetailProductMock,None)
+        service = ProdcutionOrderService(1, productionOrderMock, productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, recipeDetailProductMock,productStockMock)
         actual = service.start()
+        print(actual)
 
         self.assertEqual(actual.status.code, ProdcutionOrderStatusEnum.OK)
         self.assertEqual(len(actual.productionOrderConsumes) , 3)
@@ -102,24 +98,36 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.productionOrderConsumes[1].quantity, 5)
         self.assertEqual(actual.productionOrderConsumes[2].quantity, 2)
 
+        self.assertEqual(len(actual.productionOrderConsumesProduct), 1)
+        self.assertEqual(actual.productionOrderConsumesProduct[0].quantity, 4)
+        self.assertEqual(len(actual.productStock), 1)
+        self.assertEqual(actual.productStock[0].quantityConsumed, 4)
+
+    @patch('bakeryAdmin.models.ProductStock.objects')
+    @patch('bakeryAdmin.models.RecipeDetailProduct.objects')
     @patch('bakeryAdmin.models.ProductionOrder.objects')
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
     @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_start_missingIngredient(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, productionOrderMock):
+    def test_start_missingIngredient(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, productionOrderMock, recipeDetailProductMock, productStockMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         rdFixture = list([createRecipeDetail(id=i, quantity=3,ingredient='harina',symbol='kg') for i in range(1,2)])
         siFixture = list([createSupplierInvoiceDetail(id=i) for i in range(1,4)])
         siFixture[2].quantityAvailableCalculated = 1
         poFixture = createProductionOrder()
+        rdpFixture = list([createRecipeDetailProduct(id=i,recipe=rdFixture[0].recipe, quantity=1,product='masa base tarta',symbol='kg') for i in range(1,2)])
+        psFixture = list([createProductStock(id=i) for i in range(1,2)])
+
 
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = rdFixture
         supplierInvoiceDetailMock.annotate.return_value.filter.return_value.order_by.return_value = siFixture
+        productStockMock.annotate.return_value.filter.return_value.order_by.return_value = psFixture
         productionOrderMock.get.return_value = poFixture
+        recipeDetailProductMock.filter.return_value = rdpFixture
         
-        service = ProdcutionOrderService(1, productionOrderMock, productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, None,None)
+        service = ProdcutionOrderService(1, productionOrderMock, productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, recipeDetailProductMock,productStockMock)
         actual = service.start()
 
         self.assertEqual(actual.status.code, ProdcutionOrderStatusEnum.ERROR_MISSING_INGREDIENTS)
@@ -130,6 +138,41 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.missingIngredients[0].totalQuantityInStock, 11)
         self.assertEqual(actual.missingIngredients[0].totalToConsume, 12)
         
+    @patch('bakeryAdmin.models.ProductStock.objects')
+    @patch('bakeryAdmin.models.RecipeDetailProduct.objects')
+    @patch('bakeryAdmin.models.ProductionOrder.objects')
+    @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
+    @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
+    @patch('bakeryAdmin.models.RecipeDetail.objects')
+    @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
+    def test_start_missingProduct(self,productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, productionOrderMock, recipeDetailProductMock, productStockMock):
+        podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
+        rdFixture = list([createRecipeDetail(id=i, quantity=3,ingredient='harina',symbol='kg') for i in range(1,2)])
+        siFixture = list([createSupplierInvoiceDetail(id=i) for i in range(1,4)])
+        poFixture = createProductionOrder()
+        rdpFixture = list([createRecipeDetailProduct(id=i,recipe=rdFixture[0].recipe, quantity=1,product='masa base tarta',symbol='kg') for i in range(1,2)])
+        psFixture = list([createProductStock(id=i,quantity=2,quantityAvailableCalculated=2) for i in range(1,2)])
+
+
+        productionOrderDetailMock.filter.return_value = podFixture
+        recipeDetailMock.filter.return_value = rdFixture
+        supplierInvoiceDetailMock.annotate.return_value.filter.return_value.order_by.return_value = siFixture
+        productStockMock.annotate.return_value.filter.return_value.order_by.return_value = psFixture
+        productionOrderMock.get.return_value = poFixture
+        recipeDetailProductMock.filter.return_value = rdpFixture
+        
+        service = ProdcutionOrderService(1, productionOrderMock, productionOrderDetailMock, recipeDetailMock, supplierInvoiceDetailMock, productionOrderConsumeMock, recipeDetailProductMock,productStockMock)
+        actual = service.start()
+
+        self.assertEqual(actual.status.code, ProdcutionOrderStatusEnum.ERROR_MISSING_PRODUCTS)
+        self.assertEqual(len(actual.productionOrderConsumes), 3)
+        self.assertEqual(len(actual.supplierInvoiceDetails), 3)
+        self.assertEqual(len(actual.missingIngredients), 0)
+        self.assertEqual(len(actual.missingProducts), 1)
+        self.assertEqual(actual.missingProducts[0].aggregatedTotalProduct.productId, 2)
+        self.assertEqual(actual.missingProducts[0].totalQuantityInStock, 2)
+        self.assertEqual(actual.missingProducts[0].totalToConsume, 4)
+
 
     @patch('bakeryAdmin.models.ProductionOrder.objects')
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')

@@ -388,7 +388,12 @@ class ProdcutionOrderService:
                         detail.quantityConsumed += detail.quantityAvailable
                     totalToConsume -= detail.quantityConsumed
                     poStatus.productStock.append(detail)
-                    poStatus.productionOrderConsumesProduct.append(ProductionOrderConsumeItem(self.productionOrderId,detail.id,detail.quantityConsumed))           
+                    poStatus.productionOrderConsumesProduct.append(ProductionOrderConsumeProductItem(
+                        self.productionOrderId,
+                        detail.id,
+                        detail.quantityConsumed
+                        )
+                        )           
             return poStatus
 
 

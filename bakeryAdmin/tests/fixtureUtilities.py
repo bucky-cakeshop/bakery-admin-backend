@@ -12,6 +12,11 @@ ingredients = {
     'huevo':models.Ingredient(id=7, name="huevo"),
 }
 
+products = {
+    'masa alfajores de maicena':models.Product(id=1, name="masa alfajores de maicena"),
+    'masa base tarta':models.Product(id=2, name="masa base tarta")
+}
+
 measureUnits = {
     'kg':models.MeasureUnit(id=1,title="kilogramo", symbol="kg"),
     'lt':models.MeasureUnit(id=2,title="litro", symbol="lt"),
@@ -44,6 +49,24 @@ def createSupplierInvoiceDetail(id=1, ingredient='harina', symbol='kg', quantity
     )
     detail.quantityAvailableCalculated = quantityAvailableCalculated
     return detail
+
+def createProductStock(id=1, product='masa base tarta', symbol='kg', quantity=5, quantityConsumed=0, costPrice=2.3, sellPrice=3.3, batch='L1', 
+                                expirationDate = timezone.now() + timezone.timedelta(days=15), quantityAvailableCalculated = 5):
+    detail =  models.ProductStock(
+        id = id,
+        product = products[product],
+        measureUnit = measureUnits[symbol],
+        quantity = quantity,
+        quantityConsumed = quantityConsumed,
+        unitCostPrice = costPrice,
+        unitSellPrice = sellPrice,
+        batch = batch,
+        expirationDate = expirationDate
+    )
+    detail.quantityAvailableCalculated = quantityAvailableCalculated
+    return detail
+
+
 def createProductionOrder(id=1, title="PO Test"):
     return models.ProductionOrder(
         id = id, 
@@ -72,6 +95,14 @@ def createRecipeDetail(id, quantity, ingredient, symbol):
         measureUnit = measureUnits[symbol],
         quantity = quantity
     )
+def createRecipeDetailProduct(id, recipe, quantity, product, symbol):
+    return models.RecipeDetailProduct(
+            id=id,
+            recipe=recipe, 
+            product = products[product],
+            measureUnit = measureUnits[symbol],
+            quantity = quantity
+        )
 
 def createProductionOrderConsume(productionOrder,supplierInvoiceDetail,quantity) -> models.ProductionOrderConsume:
     return models.ProductionOrderConsume (
