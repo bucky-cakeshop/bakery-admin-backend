@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
-from .serializer import MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductStockSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer, ProductSerializer,RecipeDetailProductSerializer
+from .serializer import AggregatedProductSerializer, MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductStockSerializer, ProductionOrderConsumeProductSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer, ProductSerializer,RecipeDetailProductSerializer
 from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum, ProdcutionOrderStatus
 
 # Create your views here.
@@ -114,6 +114,12 @@ class ProductionOrderView(viewsets.ModelViewSet):
         serializer = ProductionOrderConsumeSerializer(consumes, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
+    @action(detail=True,url_path="product-consumes")
+    def product_consumes(self, request, pk=None):
+        consumes = models.ProductionOrderConsumeProduct.objects.filter(productionOrder_id = pk)
+        serializer = ProductionOrderConsumeProductSerializer(consumes, many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
     @action(detail=True, url_path='get-ingredients')
     def get_ingredients(self, request, pk=None):
         productionOrderDetails = models.ProductionOrderDetail.objects.filter(productionOrder_id = pk)
@@ -136,9 +142,26 @@ class ProductionOrderView(viewsets.ModelViewSet):
             models.SupplierInvoiceDetail.objects, 
             models.ProductionOrderConsume.objects,
             models.RecipeDetailProduct.objects,
-            models.ProductStock.objects
+            models.ProductStock.objects,
+            models.ProductionOrderConsumeProduct.objects
             ).calculateAggregatedIngredients()
         serializer = AggregatedIngredientSerializer(result, many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    @action(detail=True, url_path='get-aggregated-products')
+    def get_aggregated_products(self, request, pk=None):
+        result = ProdcutionOrderService(
+            pk,
+            models.ProductionOrder.objects, 
+            models.ProductionOrderDetail.objects, 
+            models.RecipeDetail.objects,
+            models.SupplierInvoiceDetail.objects, 
+            models.ProductionOrderConsume.objects,
+            models.RecipeDetailProduct.objects,
+            models.ProductStock.objects,
+            models.ProductionOrderConsumeProduct.objects
+            ).calculateAggregatedProducts()
+        serializer = AggregatedProductSerializer(result, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     @action(detail=True, url_path='start')
@@ -151,7 +174,8 @@ class ProductionOrderView(viewsets.ModelViewSet):
                                         models.SupplierInvoiceDetail.objects, 
                                         models.ProductionOrderConsume.objects,
                                         models.RecipeDetailProduct.objects,
-                                        models.ProductStock.objects
+                                        models.ProductStock.objects,
+                                        models.ProductionOrderConsumeProduct.objects
                                         )
         result, productionOrder = service.canStart()
 
@@ -166,6 +190,7 @@ class ProductionOrderView(viewsets.ModelViewSet):
             responseStatus = status.HTTP_404_NOT_FOUND
             if result.status.code == ProdcutionOrderStatusEnum.OK:
                 responseStatus = status.HTTP_202_ACCEPTED
+                
                 with transaction.atomic():
                     for siDetail in result.supplierInvoiceDetails:
                         siDetail.save()
@@ -175,6 +200,15 @@ class ProductionOrderView(viewsets.ModelViewSet):
                         supplierInvoiceDetail = models.SupplierInvoiceDetail.objects.get(id = poConsumes.supplierInvoiceDetail_id),
                         quantity = poConsumes.quantity
                         )
+                    for prodStock in result.productStock:
+                        prodStock.save()
+                    for poProductConsumes in result.productionOrderConsumesProduct:
+                        models.ProductionOrderConsumeProduct.objects.create(
+                            productionOrder = models.ProductionOrder.objects.get(id = poProductConsumes.productionOrder_id),
+                            productStock = models.ProductStock.objects.get(id = poProductConsumes.productStock_id),
+                            quantity = poProductConsumes.quantity
+                        )
+
                     productionOrder.startedDate = timezone.now()
                     productionOrder.canceledDate = None
                     productionOrder.save()
@@ -190,7 +224,11 @@ class ProductionOrderView(viewsets.ModelViewSet):
                                         models.ProductionOrderDetail.objects, 
                                         models.RecipeDetail.objects, 
                                         models.SupplierInvoiceDetail.objects, 
-                                        models.ProductionOrderConsume.objects)
+                                        models.ProductionOrderConsume.objects,
+                                        models.RecipeDetailProduct.objects,
+                                        models.ProductStock.objects,
+                                        models.ProductionOrderConsumeProduct.objects
+                                        )
         result, productionOrder = service.canCancel()
         if result.status.code == ProdcutionOrderStatusEnum.OK:
             responseStatus = status.HTTP_202_ACCEPTED
@@ -200,6 +238,11 @@ class ProductionOrderView(viewsets.ModelViewSet):
                     siDetail.save()
                 for poConsumes in result.productionOrderConsumes:
                     poConsumes.delete()
+                for prodStock in result.productStock:
+                    prodStock.save()
+                for poProdConsumes in result.productionOrderConsumesProduct:
+                    poProdConsumes.delete()
+
                 productionOrder.canceledDate = timezone.now()
                 productionOrder.save()
 
@@ -214,7 +257,11 @@ class ProductionOrderView(viewsets.ModelViewSet):
                                         models.ProductionOrderDetail.objects, 
                                         models.RecipeDetail.objects, 
                                         models.SupplierInvoiceDetail.objects, 
-                                        models.ProductionOrderConsume.objects)
+                                        models.ProductionOrderConsume.objects,
+                                        models.RecipeDetailProduct.objects,
+                                        models.ProductStock.objects,
+                                        models.ProductionOrderConsumeProduct.objects
+                                       )
         result, productionOrder = service.canClose()
         if result.status.code == ProdcutionOrderStatusEnum.OK:
             responseStatus = status.HTTP_202_ACCEPTED

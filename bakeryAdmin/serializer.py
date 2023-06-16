@@ -173,7 +173,7 @@ class AggregatedProductSerializer(serializers.Serializer):
     class Meta:
         fields = '__all__'
 
-class ProductionOrderConsumeInredientSerializer(serializers.Serializer):
+class ProductionOrderConsumeIngredientSerializer(serializers.Serializer):
     productionOrder_id = serializers.IntegerField()
     supplierInvoiceDetail_id = serializers.IntegerField()
     quantity = serializers.FloatField()
@@ -232,11 +232,11 @@ class ResultStatusSerializer(serializers.Serializer):
 class ProductionOrderStatusSerializer(serializers.Serializer):
     status = ResultStatusSerializer()
     supplierInvoiceDetails = serializers.ListSerializer(child=supplierInvoiceDetailForPoSerializer())
-    productionOrderConsumes = serializers.ListSerializer(child=ProductionOrderConsumeInredientSerializer())
+    productionOrderConsumes = serializers.ListSerializer(child=ProductionOrderConsumeIngredientSerializer())
     missingIngredients = serializers.ListSerializer(child=ProductionOrderMissedIngredientSerializer())
     isOk = serializers.BooleanField()
     productStock = serializers.ListSerializer(child=ProductStockForPoSerializer())
-    productionOrderConsumesProduct = serializers.ListSerializer(child=ProductionOrderConsumeInredientSerializer())
+    productionOrderConsumesProduct = serializers.ListSerializer(child=ProductionOrderConsumeProductSerializer())
     missingProducts = serializers.ListSerializer(child=ProductionOrderMissedProductSerializer())
     
     class Meta:
@@ -255,7 +255,26 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductStockSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(queryset=models.Product.objects.all()) 
+    product_object = serializers.SerializerMethodField()
+
+    measureUnit_object = serializers.SerializerMethodField()
+
+    def get_measureUnit_object(self, obj):
+        return {'id': obj.measureUnit.id, 'title': obj.measureUnit.title, 'symbol': obj.measureUnit.symbol}
+
+    def get_product_object(self, obj):
+        return {'id': obj.product.id, 'name': obj.product.name}
 
     class Meta:
         model = models.ProductStock
+        fields = '__all__'
+
+class ProductionOrderConsumeProductSerializer(serializers.ModelSerializer):
+    productionOrder = serializers.PrimaryKeyRelatedField(queryset=models.ProductionOrder.objects.all()) 
+    productStock = ProductStockSerializer()
+    
+    quantity = serializers.FloatField()
+
+    class Meta:
+        model = models.ProductionOrderConsumeProduct
         fields = '__all__'

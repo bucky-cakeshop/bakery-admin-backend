@@ -184,7 +184,7 @@ class ProdcutionOrderStatus:
 
 
 class ProdcutionOrderService:
-    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects, rDetailsProductObjects, pStockObjects) -> None:
+    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects, rDetailsProductObjects, pStockObjects, poConsumeProducObjects) -> None:
         self.poObjects = poObjects
         self.productionOrderId = productionOrderId
         self.poDetailsObjects = poDetailsObjects
@@ -193,6 +193,7 @@ class ProdcutionOrderService:
         self.poConsumeObjects = poConsumeObjects
         self.rDetailsProductObjects = rDetailsProductObjects
         self.pStockObjects = pStockObjects
+        self.poConsumeProductObjects = poConsumeProducObjects
     
     def calculateAggregatedIngredients(self) -> list[AggregatedTotalIngredient]:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
@@ -403,10 +404,16 @@ class ProdcutionOrderService:
     def cancel(self) -> ProdcutionOrderStatus:
         poStatus = ProdcutionOrderStatus.ofOk()
         poStatus.productionOrderConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
+        poStatus.productionOrderConsumesProduct = self.poConsumeProductObjects.filter(productionOrder_id = self.productionOrderId)
         for poConsume in poStatus.productionOrderConsumes:
             siDetail = self.siDetailsObjects.get(id = poConsume.supplierInvoiceDetail.id)
             siDetail.quantityConsumed = siDetail.quantityConsumed - poConsume.quantity
             poStatus.supplierInvoiceDetails.append(siDetail)
+        for poProdConsume in poStatus.productionOrderConsumesProduct:
+            prodStock = self.pStockObjects.get(id = poProdConsume.productStock_id)
+            prodStock.quantityConsumed = prodStock.quantityConsumed - poProdConsume.quantity
+            poStatus.productStock.append(prodStock)
+
         return poStatus
 
     def close(self) -> ProdcutionOrderStatus:

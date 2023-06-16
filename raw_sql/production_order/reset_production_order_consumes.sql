@@ -1,14 +1,22 @@
-select * from public."bakeryAdmin_productionorder";
-select * from public."bakeryAdmin_supplierinvoicedetail";
-select * from public."bakeryAdmin_productionorderconsume";
+select * from "bakeryAdmin_productionorder";
 
-update public."bakeryAdmin_supplierinvoicedetail" set "quantityConsumed" = 0 where ingredient_id = 1
-truncate table public."bakeryAdmin_productionorderconsume" cascade;
+select * from "bakeryAdmin_supplierinvoicedetail";
+select * from "bakeryAdmin_productionorderconsume";
 
-select * from public."bakeryAdmin_productionorder" where id = 2;
-update public."bakeryAdmin_productionorder" set "startedDate" = null, "canceledDate"=null,"closedDate"=null where id =1
+select * from "bakeryAdmin_productstock";
+select * from "bakeryAdmin_productionorderconsumeproduct";
 
-select * from public."bakeryAdmin_productionorder" where id = 1;
-select * from public."bakeryAdmin_productionorderconsume" where "productionOrder_id" = 1;
-select * from public."bakeryAdmin_supplierinvoicedetail";
-update public."bakeryAdmin_productionorder" set "canceledDate"=null where id =1
+
+update "bakeryAdmin_productionorder" set "startedDate"=null, "canceledDate"=null where id=2;
+update "bakeryAdmin_supplierinvoicedetail" set "quantityConsumed" = 0 where ingredient_Id = 1;
+update "bakeryAdmin_productstock" set "quantityConsumed" = 0 where product_id = 2;
+truncate table "bakeryAdmin_productionorderconsume";
+truncate table "bakeryAdmin_productionorderconsumeproduct";
+
+
+select * from "bakeryAdmin_ingredient"
+
+select * from "bakeryAdmin_recipedetail"
+
+select * from "bakeryAdmin_productstock";
+truncate table "bakeryAdmin_productstock" cascade
