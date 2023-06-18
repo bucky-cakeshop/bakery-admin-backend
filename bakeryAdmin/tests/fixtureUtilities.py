@@ -110,3 +110,10 @@ def createProductionOrderConsume(productionOrder,supplierInvoiceDetail,quantity)
         supplierInvoiceDetail = supplierInvoiceDetail,
         quantity = quantity
     )
+
+def createProductionOrderConsumeProduct(productionOrder,productStock,quantity) -> models.ProductionOrderConsumeProduct:
+    return models.ProductionOrderConsumeProduct (
+        productionOrder =productionOrder,
+        productStock = productStock,
+        quantity = quantity
+    )
