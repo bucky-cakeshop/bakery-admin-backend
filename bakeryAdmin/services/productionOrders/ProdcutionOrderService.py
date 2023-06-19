@@ -7,11 +7,13 @@ from collections import namedtuple
 from decimal import Decimal
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F
-from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
+from django.utils import timezone
 
+from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
 from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
 from bakeryAdmin.domain.models.production.ProductionOrderConsumeProductItem import ProductionOrderConsumeProductItem
 from bakeryAdmin.domain.models.production.ProductionOrderMissingProductItem import ProductionOrderMissingProductItem
+from bakeryAdmin.domain.models.production.ProductStockToAdd import ProductStockToAdd
 
 class AggregatedIngredient:
     def __init__(self, ingredientId,ingredientName,measureUnitId,measureUnitSymbol,quantity, recipeQuantity):
@@ -184,7 +186,7 @@ class ProdcutionOrderStatus:
 
 
 class ProdcutionOrderService:
-    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects, rDetailsProductObjects, pStockObjects, poConsumeProducObjects) -> None:
+    def __init__(self, productionOrderId, poObjects, poDetailsObjects, rDetailsObjects, siDetailsObjects, poConsumeObjects, rDetailsProductObjects, pStockObjects, poConsumeProducObjects, productObjects) -> None:
         self.poObjects = poObjects
         self.productionOrderId = productionOrderId
         self.poDetailsObjects = poDetailsObjects
@@ -194,6 +196,7 @@ class ProdcutionOrderService:
         self.rDetailsProductObjects = rDetailsProductObjects
         self.pStockObjects = pStockObjects
         self.poConsumeProductObjects = poConsumeProducObjects
+        self.productObjects = productObjects
     
     def calculateAggregatedIngredients(self) -> list[AggregatedTotalIngredient]:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
@@ -418,5 +421,26 @@ class ProdcutionOrderService:
 
     def close(self) -> ProdcutionOrderStatus:
         poStatus = ProdcutionOrderStatus.ofOk()
+        poDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
+        for detail in poDetails:
+            # recipe = self.recipeObjects.get(id=detail.recipe_id)
+            product = self.productObjects.get(recipe_id = detail.recipe_id)
+
+            # calculate batch number
+            lastProductStock = self.pStockObjects.filter(product_id = product.id).order_by("-creationAt")
+
+            poStatus.productStock.append(
+                ProductStockToAdd(
+                productId=product.id,
+                measureUnitId=product.measureUnit.id,
+                quantity=product.quantityByRecipe * detail.quantity,
+                quantityConsumed=0,
+                isForSell=product.isForSell,
+                batch="",
+                expirationDate = timezone.now() + timezone.timedelta(days=365),
+                unitCostPrice=0.0,
+                unitSellPrice=0.0
+                )
+            )
         return poStatus
 

@@ -265,9 +265,11 @@ class ProductionOrderView(viewsets.ModelViewSet):
         result, productionOrder = service.canClose()
         if result.status.code == ProdcutionOrderStatusEnum.OK:
             responseStatus = status.HTTP_202_ACCEPTED
+            service.close()
+            models.ProductStock.objects.create
 
             productionOrder.closedDate = timezone.now()
-            productionOrder.save()
+            # productionOrder.save()
 
         serializer = ProductionOrderStatusSerializer(result, many=False)
         return Response(serializer.data,status=responseStatus)

@@ -56,6 +56,7 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     recipe = models.OneToOneField(Recipe, on_delete=models.CASCADE,related_name='product_recipe')
     quantityByRecipe = models.DecimalField(max_digits=5,decimal_places=2)
+    measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.DO_NOTHING, default=1)
     isForSell = models.BooleanField(default=False)
 
 class RecipeDetailProduct(models.Model):
@@ -175,12 +176,15 @@ class ProductStock(models.Model):
     expirationDate = models.DateField()
     unitCostPrice = models.DecimalField(max_digits=5,decimal_places=2)
     unitSellPrice = models.DecimalField(max_digits=5,decimal_places=2, default=0)
+    creationAt = models.DateTimeField(default=timezone.now)
+    updatedAt = models.DateTimeField(default=timezone.now)
     
     @property
     def quantityAvailable(self):
         return self.quantity - self.quantityConsumed
 
     def save(self, *args, **kwargs):
+        self.updatedAt = timezone.now()
         if self.expirationDate < timezone.now().date():
             raise ValidationError("La fecha de expiración no puede estar en el pasado!")
         super().save(*args, **kwargs)
