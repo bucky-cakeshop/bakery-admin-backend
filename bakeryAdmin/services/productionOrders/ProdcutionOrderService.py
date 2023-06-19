@@ -427,19 +427,19 @@ class ProdcutionOrderService:
             product = self.productObjects.get(recipe_id = detail.recipe_id)
 
             # calculate batch number
-            lastProductStock = self.pStockObjects.filter(product_id = product.id).order_by("-creationAt")
+            #lastProductStock = self.pStockObjects.filter(product_id = product.id).order_by("-creationAt")
 
             poStatus.productStock.append(
                 ProductStockToAdd(
                 productId=product.id,
-                measureUnitId=product.measureUnit.id,
+                measureUnitId=product.measureUnit_id,
                 quantity=product.quantityByRecipe * detail.quantity,
                 quantityConsumed=0,
                 isForSell=product.isForSell,
-                batch="",
-                expirationDate = timezone.now() + timezone.timedelta(days=365),
-                unitCostPrice=0.0,
-                unitSellPrice=0.0
+                batch="", # To be calculated
+                expirationDate = timezone.now() + timezone.timedelta(days=365), # To be calculated
+                unitCostPrice=0.0, # To be calculated
+                unitSellPrice=0.0 # To be calculated
                 )
             )
         return poStatus

@@ -265,11 +265,23 @@ class ProductionOrderView(viewsets.ModelViewSet):
         result, productionOrder = service.canClose()
         if result.status.code == ProdcutionOrderStatusEnum.OK:
             responseStatus = status.HTTP_202_ACCEPTED
-            service.close()
-            models.ProductStock.objects.create
+            result = service.close()
+            with transaction.atomic():
+                for productStockToAdd in result.productStock:
+                    models.ProductStock.objects.create(
+                        product = models.Product.objects.get(id = productStockToAdd.productId),
+                        measureUnit = models.MeasureUnit.objects.get(id = productStockToAdd.measureUnitId),
+                        quantity=productStockToAdd.quantity,
+                        quantityConsumed=productStockToAdd.quantityConsumed,
+                        isForSell=productStockToAdd.isForSell,
+                        batch=productStockToAdd.batch,
+                        expirationDate = productStockToAdd.expirationDate,
+                        unitCostPrice=productStockToAdd.unitCostPrice,
+                        unitSellPrice=productStockToAdd.unitSellPrice
+                    )
 
-            productionOrder.closedDate = timezone.now()
-            # productionOrder.save()
+                productionOrder.closedDate = timezone.now()
+                productionOrder.save()
 
         serializer = ProductionOrderStatusSerializer(result, many=False)
         return Response(serializer.data,status=responseStatus)

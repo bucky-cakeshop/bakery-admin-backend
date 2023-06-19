@@ -117,3 +117,14 @@ def createProductionOrderConsumeProduct(productionOrder,productStock,quantity) -
         productStock = productStock,
         quantity = quantity
     )
+
+def createProduct(recipe,id=1,name="Producto masa", description="Producto masa desc", quantityByRecipe=12, measureUnit="u", isForSell=True) -> models.Product:
+    return models.Product(
+        id=id,
+        recipe = recipe,
+        name = name,
+        description = description, 
+        quantityByRecipe = quantityByRecipe,
+        measureUnit = measureUnits[measureUnit],
+        isForSell = isForSell
+    )
