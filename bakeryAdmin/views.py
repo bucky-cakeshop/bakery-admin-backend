@@ -143,7 +143,8 @@ class ProductionOrderView(viewsets.ModelViewSet):
             models.ProductionOrderConsume.objects,
             models.RecipeDetailProduct.objects,
             models.ProductStock.objects,
-            models.ProductionOrderConsumeProduct.objects
+            models.ProductionOrderConsumeProduct.objects,
+            models.Product.objects
             ).calculateAggregatedIngredients()
         serializer = AggregatedIngredientSerializer(result, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -159,7 +160,8 @@ class ProductionOrderView(viewsets.ModelViewSet):
             models.ProductionOrderConsume.objects,
             models.RecipeDetailProduct.objects,
             models.ProductStock.objects,
-            models.ProductionOrderConsumeProduct.objects
+            models.ProductionOrderConsumeProduct.objects,
+            models.Product.objects
             ).calculateAggregatedProducts()
         serializer = AggregatedProductSerializer(result, many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -175,7 +177,8 @@ class ProductionOrderView(viewsets.ModelViewSet):
                                         models.ProductionOrderConsume.objects,
                                         models.RecipeDetailProduct.objects,
                                         models.ProductStock.objects,
-                                        models.ProductionOrderConsumeProduct.objects
+                                        models.ProductionOrderConsumeProduct.objects,
+                                        models.Product.objects
                                         )
         result, productionOrder = service.canStart()
 
@@ -227,7 +230,8 @@ class ProductionOrderView(viewsets.ModelViewSet):
                                         models.ProductionOrderConsume.objects,
                                         models.RecipeDetailProduct.objects,
                                         models.ProductStock.objects,
-                                        models.ProductionOrderConsumeProduct.objects
+                                        models.ProductionOrderConsumeProduct.objects,
+                                        models.Product.objects
                                         )
         result, productionOrder = service.canCancel()
         if result.status.code == ProdcutionOrderStatusEnum.OK:
@@ -260,7 +264,8 @@ class ProductionOrderView(viewsets.ModelViewSet):
                                         models.ProductionOrderConsume.objects,
                                         models.RecipeDetailProduct.objects,
                                         models.ProductStock.objects,
-                                        models.ProductionOrderConsumeProduct.objects
+                                        models.ProductionOrderConsumeProduct.objects,
+                                        models.Product.objects
                                        )
         result, productionOrder = service.canClose()
         if result.status.code == ProdcutionOrderStatusEnum.OK:
@@ -282,7 +287,7 @@ class ProductionOrderView(viewsets.ModelViewSet):
 
                 productionOrder.closedDate = timezone.now()
                 productionOrder.save()
-
+        result.productStock.clear()
         serializer = ProductionOrderStatusSerializer(result, many=False)
         return Response(serializer.data,status=responseStatus)
 
