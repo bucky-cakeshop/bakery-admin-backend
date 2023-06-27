@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
 from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
+from bakeryAdmin.domain.models.production.IngredientConsume import IngredientConsume
 from bakeryAdmin.domain.models.production.ProductionOrderConsumeProductItem import ProductionOrderConsumeProductItem
 from bakeryAdmin.domain.models.production.ProductionOrderMissingProductItem import ProductionOrderMissingProductItem
 from bakeryAdmin.domain.models.production.ProductStockToAdd import ProductStockToAdd
@@ -430,10 +431,12 @@ class ProdcutionOrderService:
             recipeIngredients = self.rDetailsObjects.filter(recipe_id = detail.recipe_id)
             #recipeProducts = self.rDetailsProductObjects.filter(recipe_id = detail.recipe_id)
             for recipeIngredient in recipeIngredients:
-                print(recipeIngredient)
-                #ingredientConsumed = ingredientsConsumes.filter(supplierInvoiceDetail.ingredient_id = recipeIngredient.ingredient_id)
-                ingredientConsumed = [consumed for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeIngredient.ingredient_id]
-
+                
+                # Get production order consumes by recipe ingredient
+                ingredientConsumed = [
+                    IngredientConsume(recipeDetail_id=recipeIngredient.id,productionOrderConsume_id=consumed.id) 
+                    for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeIngredient.ingredient_id]
+                print(ingredientConsumed)
 
             # product = self.productObjects.get(recipe_id = detail.recipe_id)
 

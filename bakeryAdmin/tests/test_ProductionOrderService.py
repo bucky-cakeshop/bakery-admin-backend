@@ -276,7 +276,7 @@ class ProductionOrderServiceTest(TestCase):
         recipe = createRecipe()
         recipeIngredientsFixture = list([createRecipeDetail(id=i,quantity=4,symbol="kg",ingredient="harina",recipe=recipe) for i in range(1,2)])
         pFixture = list([createProduct(recipe, id=i) for i in range(1,2)])
-        ingredientConsumeFixture = list([createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15) for i in range(1,2)])
+        ingredientConsumeFixture = list([createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15,id=i) for i in range(1,2)])
 
 
         productionOrderDetailMock.filter.return_value = podFixture

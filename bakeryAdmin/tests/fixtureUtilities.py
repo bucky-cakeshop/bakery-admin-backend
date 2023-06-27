@@ -109,8 +109,9 @@ def createRecipeDetailProduct(id, recipe, quantity, product, symbol):
             quantity = quantity
         )
 
-def createProductionOrderConsume(productionOrder,supplierInvoiceDetail,quantity) -> models.ProductionOrderConsume:
+def createProductionOrderConsume(productionOrder,supplierInvoiceDetail,quantity,id=1) -> models.ProductionOrderConsume:
     return models.ProductionOrderConsume (
+        id=id,
         productionOrder =productionOrder,
         supplierInvoiceDetail = supplierInvoiceDetail,
         quantity = quantity
