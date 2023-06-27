@@ -244,22 +244,53 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.productionOrderConsumes[0].quantity, 5)
         self.assertEqual(actual.productionOrderConsumesProduct[0].quantity, 5)
 
+    @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
+    @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
     @patch('bakeryAdmin.models.ProductStock.objects')
     @patch('bakeryAdmin.models.Product.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_close_ok(self,productionOrderDetailMock, productMock, productStockMock):
+    def test_close_ok(self,productionOrderDetailMock, productMock, productStockMock, supplierInvoiceDetailMock,productionOrderConsumeMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         recipe = createRecipe()
         pFixture = list([createProduct(recipe, id=i) for i in range(1,2)])
+        ingredientConsumeFixture = createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15)
 
         productionOrderDetailMock.filter.return_value = podFixture
         productMock.get.return_value=pFixture[0]
+        productionOrderConsumeMock.filter = ingredientConsumeFixture
 
-        service = ProdcutionOrderService(1,None, productionOrderDetailMock, None, None, None, None,None,None, productMock)
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, None, None, productionOrderConsumeMock, None,None,None, productMock)
         actual = service.close()
 
         self.assertEqual(len(actual.productStock), 1)
         self.assertEqual(actual.productStock[0].quantity, 48)
+
+    @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
+    @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
+    @patch('bakeryAdmin.models.RecipeDetail.objects')
+    @patch('bakeryAdmin.models.ProductStock.objects')
+    @patch('bakeryAdmin.models.Product.objects')
+    @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
+    def test_close_ingredients_price(self,productionOrderDetailMock, productMock, productStockMock, recipeDetailMock,supplierInvoiceDetailMock,productionOrderConsumeMock):
+        podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
+        recipe = createRecipe()
+        recipeIngredientsFixture = list([createRecipeDetail(id=i,quantity=4,symbol="kg",ingredient="harina",recipe=recipe) for i in range(1,2)])
+        pFixture = list([createProduct(recipe, id=i) for i in range(1,2)])
+        ingredientConsumeFixture = list([createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15) for i in range(1,2)])
+
+
+        productionOrderDetailMock.filter.return_value = podFixture
+        productMock.get.return_value=pFixture[0]
+        recipeDetailMock.filter.return_value = recipeIngredientsFixture
+        productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
+
+
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, productMock)
+        actual = service.close()
+
+        # self.assertEqual(len(actual.productStock), 1)
+        # self.assertEqual(actual.productStock[0].quantity, 48)
+
 
     def test_isCreated_ok(self):
         poFixture = createProductionOrder()

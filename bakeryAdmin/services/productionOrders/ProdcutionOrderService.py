@@ -422,26 +422,37 @@ class ProdcutionOrderService:
     def close(self) -> ProdcutionOrderStatus:
         poStatus = ProdcutionOrderStatus.ofOk()
         poDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
+        ingredientsConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
+        #productsConsumes = self.poConsumeProductObjects.filter(productionOrder_id = self.productionOrderId)
+
         for detail in poDetails:
-            # recipe = self.recipeObjects.get(id=detail.recipe_id)
-            product = self.productObjects.get(recipe_id = detail.recipe_id)
+            #recipe = self.recipeObjects.get(id=detail.recipe_id)
+            recipeIngredients = self.rDetailsObjects.filter(recipe_id = detail.recipe_id)
+            #recipeProducts = self.rDetailsProductObjects.filter(recipe_id = detail.recipe_id)
+            for recipeIngredient in recipeIngredients:
+                print(recipeIngredient)
+                #ingredientConsumed = ingredientsConsumes.filter(supplierInvoiceDetail.ingredient_id = recipeIngredient.ingredient_id)
+                ingredientConsumed = [consumed for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeIngredient.ingredient_id]
 
-            # calculate batch number
-            lastProductStock = self.pStockObjects.filter(product_id = product.id).order_by("-creationAt")
-            batchNumber = datetime.date.today().strftime("%Y%m%d")
 
-            poStatus.productStock.append(
-                ProductStockToAdd(
-                productId=product.id,
-                measureUnitId=product.measureUnit_id,
-                quantity=product.quantityByRecipe * detail.quantity,
-                quantityConsumed=0,
-                isForSell=product.isForSell,
-                batch="", # To be calculated
-                expirationDate = (timezone.now() + timezone.timedelta(days=365)).date(), # To be calculated
-                unitCostPrice=0.0, # To be calculated
-                unitSellPrice=0.0 # To be calculated
-                )
-            )
+            # product = self.productObjects.get(recipe_id = detail.recipe_id)
+
+            # # calculate batch number
+            # lastProductStock = self.pStockObjects.filter(product_id = product.id).order_by("-creationAt")
+            # batchNumber = datetime.date.today().strftime("%Y%m%d")
+
+            # poStatus.productStock.append(
+            #     ProductStockToAdd(
+            #     productId=product.id,
+            #     measureUnitId=product.measureUnit_id,
+            #     quantity=product.quantityByRecipe * detail.quantity,
+            #     quantityConsumed=0,
+            #     isForSell=product.isForSell,
+            #     batch="", # To be calculated
+            #     expirationDate = (timezone.now() + timezone.timedelta(days=365)).date(), # To be calculated
+            #     unitCostPrice=0.0, # To be calculated
+            #     unitSellPrice=0.0 # To be calculated
+            #     )
+            # )
         return poStatus
 
