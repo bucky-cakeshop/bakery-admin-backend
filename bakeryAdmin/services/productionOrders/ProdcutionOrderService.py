@@ -5,12 +5,14 @@ import json
 from dataclasses import dataclass
 from collections import namedtuple
 from decimal import Decimal
+from typing import List
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F
 from django.utils import timezone
 
 from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
 from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
+from bakeryAdmin.domain.models.production.IngredientConsumeByProductionOrderDetail import IngredientConsumeByProductionOrderDetail
 from bakeryAdmin.domain.models.production.IngredientConsumeByRecipeDetail import IngredientConsumeByRecipeDetail
 from bakeryAdmin.domain.models.production.ProductionOrderConsumeProductItem import ProductionOrderConsumeProductItem
 from bakeryAdmin.domain.models.production.ProductionOrderMissingProductItem import ProductionOrderMissingProductItem
@@ -423,46 +425,58 @@ class ProdcutionOrderService:
     def close(self) -> ProdcutionOrderStatus:
         poStatus = ProdcutionOrderStatus.ofOk()
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
-        ingredientsConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
-        #productsConsumes = self.poConsumeProductObjects.filter(productionOrder_id = self.productionOrderId)
 
+        # # calculate batch number
+        # lastProductStock = self.pStockObjects.filter(product_id = product.id).order_by("-creationAt")
+        # batchNumber = datetime.date.today().strftime("%Y%m%d")
+
+        for productionOrderDetail in productionOrderDetails:
+            product = self.productObjects.get(recipe_id = productionOrderDetail.recipe_id)
+            poStatus.productStock.append(
+                ProductStockToAdd(
+                productId=product.id,
+                measureUnitId=product.measureUnit_id,
+                quantity=product.quantityByRecipe * productionOrderDetail.quantity,
+                quantityConsumed=0,
+                isForSell=product.isForSell,
+                batch="", # To be calculated
+                expirationDate = (timezone.now() + timezone.timedelta(days=365)).date(), # To be calculated
+                unitCostPrice=0.0, # To be calculated
+                unitSellPrice=0.0 # To be calculated
+                )
+            )
+        return poStatus
+
+    def getIngredientConsumeByProductionOrderDetail(self) -> IngredientConsumeByProductionOrderDetail:
+        productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
+        ingredientsConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
+
+        consumesByProductionOrderDetail = []
         for productionOrderDetail in productionOrderDetails:
             #recipe = self.recipeObjects.get(id=detail.recipe_id)
             recipeDetails = self.rDetailsObjects.filter(recipe_id = productionOrderDetail.recipe_id)
             #recipeProducts = self.rDetailsProductObjects.filter(recipe_id = detail.recipe_id)
+            ingredientConsumeByProductionOrderDetail = IngredientConsumeByProductionOrderDetail(
+                productionOrderDetail_id = productionOrderDetail.id,
+                ingredientsConsumesByRecipeDetail = []
+            )
+
             for recipeDetail in recipeDetails:
-                
                 # Get production order consumes by recipe ingredient
                 ingredientConsumed = [
                     IngredientConsumeByRecipeDetail(
-                    recipeDetail_id=recipeDetail.id,
-                    productionOrderConsume_id=consumed.id,
-                    totalQuantity=recipeDetail.quantity * productionOrderDetail.quantity,
-                    expirationDate=consumed.supplierInvoiceDetail.expirationDate,
-                    unitCostPrice=consumed.supplierInvoiceDetail.price,
-                    measureUnit_id=consumed.supplierInvoiceDetail.measureUnit_id
+                    recipeDetail_id = recipeDetail.id,
+                    productionOrderConsume_id = consumed.id,
+                    totalQuantity = consumed.quantity,
+                    expirationDate = consumed.supplierInvoiceDetail.expirationDate,
+                    unitCostPrice = consumed.supplierInvoiceDetail.price,
+                    measureUnit_id = consumed.supplierInvoiceDetail.measureUnit_id
                     ) 
                     for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeDetail.ingredient_id]
-                print(ingredientConsumed)
+                ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail.extend(ingredientConsumed)
 
-            # product = self.productObjects.get(recipe_id = detail.recipe_id)
+            consumesByProductionOrderDetail.append(ingredientConsumeByProductionOrderDetail)
+        return consumesByProductionOrderDetail
+                
 
-            # # calculate batch number
-            # lastProductStock = self.pStockObjects.filter(product_id = product.id).order_by("-creationAt")
-            # batchNumber = datetime.date.today().strftime("%Y%m%d")
-
-            # poStatus.productStock.append(
-            #     ProductStockToAdd(
-            #     productId=product.id,
-            #     measureUnitId=product.measureUnit_id,
-            #     quantity=product.quantityByRecipe * detail.quantity,
-            #     quantityConsumed=0,
-            #     isForSell=product.isForSell,
-            #     batch="", # To be calculated
-            #     expirationDate = (timezone.now() + timezone.timedelta(days=365)).date(), # To be calculated
-            #     unitCostPrice=0.0, # To be calculated
-            #     unitSellPrice=0.0 # To be calculated
-            #     )
-            # )
-        return poStatus
 

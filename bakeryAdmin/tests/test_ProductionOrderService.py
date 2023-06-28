@@ -266,31 +266,114 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.productStock[0].quantity, 48)
 
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
-    @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
-    @patch('bakeryAdmin.models.ProductStock.objects')
-    @patch('bakeryAdmin.models.Product.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_close_ingredients_price(self,productionOrderDetailMock, productMock, productStockMock, recipeDetailMock,supplierInvoiceDetailMock,productionOrderConsumeMock):
+    def test_getIngredientConsumeByProductionOrderDetail_oneIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         recipe = createRecipe()
         recipeIngredientsFixture = list([createRecipeDetail(id=i,quantity=4,symbol="kg",ingredient="harina",recipe=recipe) for i in range(1,2)])
-        pFixture = list([createProduct(recipe, id=i) for i in range(1,2)])
-        ingredientConsumeFixture = list([createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15,id=i) for i in range(1,2)])
-
+        ingredientConsumeFixture = list([createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),16,id=i) for i in range(1,2)])
 
         productionOrderDetailMock.filter.return_value = podFixture
-        productMock.get.return_value=pFixture[0]
         recipeDetailMock.filter.return_value = recipeIngredientsFixture
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
 
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
+        actual = service.getIngredientConsumeByProductionOrderDetail()
 
-        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, productMock)
-        actual = service.close()
+        print(actual)
 
-        # self.assertEqual(len(actual.productStock), 1)
-        # self.assertEqual(actual.productStock[0].quantity, 48)
+        self.assertEqual(len(actual), 1)
+        self.assertEqual(len(actual[0].ingredientsConsumesByRecipeDetail), 1)
+        self.assertEqual(actual[0].productionOrderDetail_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].measureUnit_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].productionOrderConsume_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].recipeDetail_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].totalQuantity, 16)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].unitCostPrice, 2.3)
 
+    @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
+    @patch('bakeryAdmin.models.RecipeDetail.objects')
+    @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
+    def test_getIngredientConsumeByProductionOrderDetail_twoIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock):
+        podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
+        recipe = createRecipe()
+        recipeIngredientsFixture = list([createRecipeDetail(id=i,quantity=4,symbol="kg",ingredient="harina",recipe=recipe) for i in range(1,2)])
+        ingredientConsumeFixture = list(
+            [createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),8,id=i) for i in range(1,3)]
+        )
+
+        productionOrderDetailMock.filter.return_value = podFixture
+        recipeDetailMock.filter.return_value = recipeIngredientsFixture
+        productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
+
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
+        actual = service.getIngredientConsumeByProductionOrderDetail()
+
+        print(actual)
+
+        self.assertEqual(len(actual), 1)
+        self.assertEqual(len(actual[0].ingredientsConsumesByRecipeDetail), 2)
+        self.assertEqual(actual[0].productionOrderDetail_id, 1)
+        
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].measureUnit_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].productionOrderConsume_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].recipeDetail_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].totalQuantity, 8)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].unitCostPrice, 2.3)
+        
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].measureUnit_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].productionOrderConsume_id, 2)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].recipeDetail_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].totalQuantity, 8)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].unitCostPrice, 2.3)
+
+    @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
+    @patch('bakeryAdmin.models.RecipeDetail.objects')
+    @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
+    def test_getIngredientConsumeByProductionOrderDetail_twoRecipeDetails_twoIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock):
+        podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
+        recipe = createRecipe()
+        recipeIngredientsFixture = []
+        recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=4,symbol="kg",ingredient="harina",recipe=recipe))
+        recipeIngredientsFixture.append(createRecipeDetail(id=2,quantity=2,symbol="kg",ingredient="azúcar",recipe=recipe))
+
+        po = createProductionOrder()
+        ingredientConsumeFixture = []
+        ingredientConsumeFixture.append(createProductionOrderConsume(po,createSupplierInvoiceDetail(),8,id=1))
+        ingredientConsumeFixture.append(createProductionOrderConsume(po,createSupplierInvoiceDetail(),8,id=2))
+        ingredientConsumeFixture.append(createProductionOrderConsume(po,createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg"),8,id=3))
+
+        productionOrderDetailMock.filter.return_value = podFixture
+        recipeDetailMock.filter.return_value = recipeIngredientsFixture
+        productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
+
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
+        actual = service.getIngredientConsumeByProductionOrderDetail()
+
+        print(actual)
+
+        self.assertEqual(len(actual), 1)
+        self.assertEqual(len(actual[0].ingredientsConsumesByRecipeDetail), 3)
+        self.assertEqual(actual[0].productionOrderDetail_id, 1)
+        
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].measureUnit_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].productionOrderConsume_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].recipeDetail_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].totalQuantity, 8)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[0].unitCostPrice, 2.3)
+        
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].measureUnit_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].productionOrderConsume_id, 2)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].recipeDetail_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].totalQuantity, 8)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[1].unitCostPrice, 2.3)
+
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[2].measureUnit_id, 1)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[2].productionOrderConsume_id, 3)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[2].recipeDetail_id, 2)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[2].totalQuantity, 8)
+        self.assertEqual(actual[0].ingredientsConsumesByRecipeDetail[2].unitCostPrice, 2.3)
 
     def test_isCreated_ok(self):
         poFixture = createProductionOrder()
