@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
 from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
-from bakeryAdmin.domain.models.production.IngredientConsume import IngredientConsume
+from bakeryAdmin.domain.models.production.IngredientConsumeByRecipeDetail import IngredientConsumeByRecipeDetail
 from bakeryAdmin.domain.models.production.ProductionOrderConsumeProductItem import ProductionOrderConsumeProductItem
 from bakeryAdmin.domain.models.production.ProductionOrderMissingProductItem import ProductionOrderMissingProductItem
 from bakeryAdmin.domain.models.production.ProductStockToAdd import ProductStockToAdd
@@ -422,20 +422,27 @@ class ProdcutionOrderService:
 
     def close(self) -> ProdcutionOrderStatus:
         poStatus = ProdcutionOrderStatus.ofOk()
-        poDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
+        productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
         ingredientsConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
         #productsConsumes = self.poConsumeProductObjects.filter(productionOrder_id = self.productionOrderId)
 
-        for detail in poDetails:
+        for productionOrderDetail in productionOrderDetails:
             #recipe = self.recipeObjects.get(id=detail.recipe_id)
-            recipeIngredients = self.rDetailsObjects.filter(recipe_id = detail.recipe_id)
+            recipeDetails = self.rDetailsObjects.filter(recipe_id = productionOrderDetail.recipe_id)
             #recipeProducts = self.rDetailsProductObjects.filter(recipe_id = detail.recipe_id)
-            for recipeIngredient in recipeIngredients:
+            for recipeDetail in recipeDetails:
                 
                 # Get production order consumes by recipe ingredient
                 ingredientConsumed = [
-                    IngredientConsume(recipeDetail_id=recipeIngredient.id,productionOrderConsume_id=consumed.id) 
-                    for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeIngredient.ingredient_id]
+                    IngredientConsumeByRecipeDetail(
+                    recipeDetail_id=recipeDetail.id,
+                    productionOrderConsume_id=consumed.id,
+                    totalQuantity=recipeDetail.quantity * productionOrderDetail.quantity,
+                    expirationDate=consumed.supplierInvoiceDetail.expirationDate,
+                    unitCostPrice=consumed.supplierInvoiceDetail.price,
+                    measureUnit_id=consumed.supplierInvoiceDetail.measureUnit_id
+                    ) 
+                    for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeDetail.ingredient_id]
                 print(ingredientConsumed)
 
             # product = self.productObjects.get(recipe_id = detail.recipe_id)
