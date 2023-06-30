@@ -9,4 +9,5 @@ class IngredientConsumeByRecipeDetail:
     expirationDate: datetime.datetime
     unitCostPrice: float
     measureUnit_id: int
+    ingredient_id: int
     

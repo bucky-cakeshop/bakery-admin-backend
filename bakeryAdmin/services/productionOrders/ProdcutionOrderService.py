@@ -470,7 +470,8 @@ class ProdcutionOrderService:
                     totalQuantity = consumed.quantity,
                     expirationDate = consumed.supplierInvoiceDetail.expirationDate,
                     unitCostPrice = consumed.supplierInvoiceDetail.price,
-                    measureUnit_id = consumed.supplierInvoiceDetail.measureUnit_id
+                    measureUnit_id = consumed.supplierInvoiceDetail.measureUnit_id,
+                    ingredient_id = consumed.supplierInvoiceDetail.ingredient_id
                     ) 
                     for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeDetail.ingredient_id]
                 ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail.extend(ingredientConsumed)
