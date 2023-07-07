@@ -9,6 +9,7 @@ from typing import List
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F
 from django.utils import timezone
+from operator import attrgetter, itemgetter
 
 from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
 from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
@@ -458,7 +459,9 @@ class ProdcutionOrderService:
             #recipeProducts = self.rDetailsProductObjects.filter(recipe_id = detail.recipe_id)
             ingredientConsumeByProductionOrderDetail = IngredientConsumeByProductionOrderDetail(
                 productionOrderDetail_id = productionOrderDetail.id,
-                ingredientsConsumesByRecipeDetail = []
+                ingredientsConsumesByRecipeDetail = [],
+                expirationDate=timezone.now(),
+                costPrice=0
             )
 
             for recipeDetail in recipeDetails:
@@ -476,6 +479,12 @@ class ProdcutionOrderService:
                     for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeDetail.ingredient_id]
                 ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail.extend(ingredientConsumed)
 
+            
+            ingredientConsumeByProductionOrderDetail.expirationDate = min([item.expirationDate for item in ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail])
+            
+            ingredientConsumeByProductionOrderDetail.costPrice = round(
+                sum(detail.unitCostPrice for detail in ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail),
+                2)
             consumesByProductionOrderDetail.append(ingredientConsumeByProductionOrderDetail)
         return consumesByProductionOrderDetail
                 
