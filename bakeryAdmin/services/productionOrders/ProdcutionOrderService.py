@@ -134,7 +134,7 @@ class ResultStatus:
     
 
 @dataclass
-class ProdcutionOrderStatus:
+class ProductionOrderStatus:
     status: ResultStatus
     supplierInvoiceDetails: list
     productionOrderConsumes: list[ProductionOrderConsumeItem]
@@ -149,35 +149,35 @@ class ProdcutionOrderStatus:
 
     @staticmethod
     def ofOk():
-        return ProdcutionOrderStatus(ResultStatus.ofOk(),[],[],[],[],[],[])
+        return ProductionOrderStatus(ResultStatus.ofOk(),[],[],[],[],[],[])
 
     @staticmethod
     def ofMissingIngredient():
-        return ProdcutionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[],[],[],[])
+        return ProductionOrderStatus(ResultStatus.ofMissingIngredient(),[],[],[],[],[],[])
 
     @staticmethod
     def ofMissingProduct():
-        return ProdcutionOrderStatus(ResultStatus.ofMissingProduct(),[],[],[],[],[],[])
+        return ProductionOrderStatus(ResultStatus.ofMissingProduct(),[],[],[],[],[],[])
 
     @staticmethod
     def ofAlreadyStarted():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[],[],[],[])
+        return ProductionOrderStatus(ResultStatus.ofAlreadyStarted(),[],[],[],[],[],[])
 
     @staticmethod
     def ofAlreadyCanceled():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[],[],[],[])
+        return ProductionOrderStatus(ResultStatus.ofAlreadyCanceled(),[],[],[],[],[],[])
 
     @staticmethod
     def ofAlreadyClosed():
-        return ProdcutionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[],[],[],[])
+        return ProductionOrderStatus(ResultStatus.ofAlreadyClosed(),[],[],[],[],[],[])
 
     @staticmethod
     def ofCanceledCantClose():
-        return ProdcutionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[],[],[],[])
+        return ProductionOrderStatus(ResultStatus.ofCanceledCantClose(),[],[],[],[],[],[])
 
     @staticmethod
     def ofShouldStart():
-        return ProdcutionOrderStatus(ResultStatus.ofShouldStart(),[],[],[],[],[],[])
+        return ProductionOrderStatus(ResultStatus.ofShouldStart(),[],[],[],[],[],[])
 
     def to_dict(self):
         return self.__dict__
@@ -292,56 +292,56 @@ class ProdcutionOrderService:
     def isClosed(self, productionOrder) -> bool:
         return productionOrder.startedDate != None and productionOrder.canceledDate == None and productionOrder.closedDate != None
 
-    def canStart(self) -> tuple[ProdcutionOrderStatus, object]:
+    def canStart(self) -> tuple[ProductionOrderStatus, object]:
         productionOrder = self.poObjects.get(id = self.productionOrderId)
         
         if(self.isCreated(productionOrder=productionOrder) or self.isCanceled(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofOk()
+            result = ProductionOrderStatus.ofOk()
         
         elif(self.isStarted(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofAlreadyStarted()
+            result = ProductionOrderStatus.ofAlreadyStarted()
         
         elif(self.isClosed(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofAlreadyClosed()
+            result = ProductionOrderStatus.ofAlreadyClosed()
 
         return result, productionOrder
 
-    def canCancel(self) -> tuple[ProdcutionOrderStatus, object]:
+    def canCancel(self) -> tuple[ProductionOrderStatus, object]:
         productionOrder = self.poObjects.get(id = self.productionOrderId)
         
         if(self.isStarted(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofOk()
+            result = ProductionOrderStatus.ofOk()
         
         elif(self.isCreated(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofShouldStart()
+            result = ProductionOrderStatus.ofShouldStart()
         
         elif(self.isClosed(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofAlreadyClosed()
+            result = ProductionOrderStatus.ofAlreadyClosed()
         
         elif(self.isCanceled(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofAlreadyCanceled()
+            result = ProductionOrderStatus.ofAlreadyCanceled()
         
         return result, productionOrder
 
-    def canClose(self) -> tuple[ProdcutionOrderStatus, object]:
+    def canClose(self) -> tuple[ProductionOrderStatus, object]:
         productionOrder = self.poObjects.get(id = self.productionOrderId)
         
         if(self.isStarted(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofOk()
+            result = ProductionOrderStatus.ofOk()
         
         elif(self.isCreated(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofShouldStart()
+            result = ProductionOrderStatus.ofShouldStart()
         
         elif(self.isClosed(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofAlreadyClosed()
+            result = ProductionOrderStatus.ofAlreadyClosed()
         
         elif(self.isCanceled(productionOrder=productionOrder)):
-            result = ProdcutionOrderStatus.ofCanceledCantClose()
+            result = ProductionOrderStatus.ofCanceledCantClose()
         
         return result, productionOrder
 
-    def start(self) -> ProdcutionOrderStatus:
-        poStatus = ProdcutionOrderStatus.ofOk()
+    def start(self) -> ProductionOrderStatus:
+        poStatus = ProductionOrderStatus.ofOk()
         aggregatedIngredients = self.calculateAggregatedIngredients()
         aggregatedProducts = self.calculateAggregatedProducts()
         
@@ -408,8 +408,8 @@ class ProdcutionOrderService:
             return poStatus
 
 
-    def cancel(self) -> ProdcutionOrderStatus:
-        poStatus = ProdcutionOrderStatus.ofOk()
+    def cancel(self) -> ProductionOrderStatus:
+        poStatus = ProductionOrderStatus.ofOk()
         poStatus.productionOrderConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
         poStatus.productionOrderConsumesProduct = self.poConsumeProductObjects.filter(productionOrder_id = self.productionOrderId)
         for poConsume in poStatus.productionOrderConsumes:
@@ -423,15 +423,12 @@ class ProdcutionOrderService:
 
         return poStatus
 
-    def close(self) -> ProdcutionOrderStatus:
-        poStatus = ProdcutionOrderStatus.ofOk()
+    def close(self) -> ProductionOrderStatus:
+        poStatus = ProductionOrderStatus.ofOk()
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
 
-        # # calculate batch number
-        # lastProductStock = self.pStockObjects.filter(product_id = product.id).order_by("-creationAt")
-        # batchNumber = datetime.date.today().strftime("%Y%m%d")
-
         for productionOrderDetail in productionOrderDetails:
+            productDetails = self.getIngredientsConsumesByProductionOrderDetail(productionOrderDetail)
             product = self.productObjects.get(recipe_id = productionOrderDetail.recipe_id)
             poStatus.productStock.append(
                 ProductStockToAdd(
@@ -440,44 +437,34 @@ class ProdcutionOrderService:
                 quantity=product.quantityByRecipe * productionOrderDetail.quantity,
                 quantityConsumed=0,
                 isForSell=product.isForSell,
-                batch="", # To be calculated
-                expirationDate = (timezone.now() + timezone.timedelta(days=365)).date(), # To be calculated
-                unitCostPrice=0.0, # To be calculated
-                unitSellPrice=0.0 # To be calculated
+                batch=productDetails.batch,
+                expirationDate = productDetails.expirationDate,
+                unitCostPrice=productDetails.costPrice,
+                unitSellPrice=productDetails.sellPrice
                 )
             )
         return poStatus
 
-    def getIngredientConsumeByProductionOrderDetail(self) -> IngredientConsumeByProductionOrderDetail:
-        productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
+    def getIngredientsConsumesByProductionOrderDetail(self, productionOrderDetail) -> IngredientConsumeByProductionOrderDetail:
         ingredientsConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
 
-        consumesByProductionOrderDetail = []
-        for productionOrderDetail in productionOrderDetails:
-            #recipe = self.recipeObjects.get(id=detail.recipe_id)
-            recipeDetails = self.rDetailsObjects.filter(recipe_id = productionOrderDetail.recipe_id)
-            #recipeProducts = self.rDetailsProductObjects.filter(recipe_id = detail.recipe_id)
-            ingredientConsumeByProductionOrderDetail = IngredientConsumeByProductionOrderDetail(
-                productionOrderDetail_id = productionOrderDetail.id,
-                ingredientsConsumesByRecipeDetail = [],
-                expirationDate=timezone.now(),
-                costPrice=0
-            )
+        recipeDetails = self.rDetailsObjects.filter(recipe_id = productionOrderDetail.recipe_id)
+        ingredientConsumeByProductionOrderDetail = IngredientConsumeByProductionOrderDetail.of(productionOrderDetail.id)
 
-            for recipeDetail in recipeDetails:
-                # Get production order consumes by recipe ingredient
-                ingredientConsumed = [
-                    IngredientConsumeByRecipeDetail(
-                    recipeDetail_id = recipeDetail.id,
-                    productionOrderConsume_id = consumed.id,
-                    totalQuantity = consumed.quantity,
-                    expirationDate = consumed.supplierInvoiceDetail.expirationDate,
-                    unitCostPrice = consumed.supplierInvoiceDetail.price,
-                    measureUnit_id = consumed.supplierInvoiceDetail.measureUnit_id,
-                    ingredient_id = consumed.supplierInvoiceDetail.ingredient_id
-                    ) 
-                    for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeDetail.ingredient_id]
-                ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail.extend(ingredientConsumed)
+        for recipeDetail in recipeDetails:
+            # Get production order consumes by recipe ingredient
+            ingredientConsumed = [
+                IngredientConsumeByRecipeDetail(
+                recipeDetail_id = recipeDetail.id,
+                productionOrderConsume_id = consumed.id,
+                totalQuantity = consumed.quantity,
+                expirationDate = consumed.supplierInvoiceDetail.expirationDate,
+                unitCostPrice = consumed.supplierInvoiceDetail.price,
+                measureUnit_id = consumed.supplierInvoiceDetail.measureUnit_id,
+                ingredient_id = consumed.supplierInvoiceDetail.ingredient_id
+                ) 
+                for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeDetail.ingredient_id]
+            ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail.extend(ingredientConsumed)
 
             
             ingredientConsumeByProductionOrderDetail.expirationDate = min([item.expirationDate for item in ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail])
@@ -485,8 +472,21 @@ class ProdcutionOrderService:
             ingredientConsumeByProductionOrderDetail.costPrice = round(
                 sum(detail.unitCostPrice for detail in ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail),
                 2)
+            ingredientConsumeByProductionOrderDetail.batch = ProdcutionOrderService.getBatchNumber()
+        return ingredientConsumeByProductionOrderDetail
+
+    def getIngredientsConsumesByProductionOrder(self) -> List[IngredientConsumeByProductionOrderDetail]:
+        productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
+
+        consumesByProductionOrderDetail = []
+        for productionOrderDetail in productionOrderDetails:
+            ingredientConsumeByProductionOrderDetail = self.getIngredientsConsumesByProductionOrderDetail(productionOrderDetail)
             consumesByProductionOrderDetail.append(ingredientConsumeByProductionOrderDetail)
         return consumesByProductionOrderDetail
+    
+    @classmethod
+    def getBatchNumber(self) -> str:
+        return datetime.date.today().strftime("%Y%m%d")
                 
 
 

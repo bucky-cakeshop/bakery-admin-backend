@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from bakeryAdmin import models
 from .serializer import AggregatedProductSerializer, MeasureUnitSerializer, IngredientSerializer, FixedCostSerializer, ProductStockSerializer, ProductionOrderConsumeProductSerializer, ProductionOrderConsumeSerializer, ProductionOrderStatusSerializer, RecipeSerializer, RecipeDetailSerializer, SupplierSerializer,SupplierInvoiceSerializer,SupplierInvoiceDetailSerializer, MakeSerializer, ProductionOrderSerializer,ProductionOrderDetailSerializer, AggregatedIngredientSerializer, ProductSerializer,RecipeDetailProductSerializer
-from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum, ProdcutionOrderStatus
+from .services.productionOrders.ProdcutionOrderService import ProdcutionOrderService, ProdcutionOrderStatusEnum, ProductionOrderStatus
 
 # Create your views here.
 class MeasureUnitView(viewsets.ModelViewSet):

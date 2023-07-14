@@ -244,26 +244,46 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.productionOrderConsumes[0].quantity, 5)
         self.assertEqual(actual.productionOrderConsumesProduct[0].quantity, 5)
 
+    @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
     @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
     @patch('bakeryAdmin.models.ProductStock.objects')
     @patch('bakeryAdmin.models.Product.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_close_ok(self,productionOrderDetailMock, productMock, productStockMock, supplierInvoiceDetailMock,productionOrderConsumeMock):
+    def test_close_ok(self,productionOrderDetailMock, productMock, productStockMock, supplierInvoiceDetailMock,productionOrderConsumeMock, recipeDetailMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         recipe = createRecipe()
+        recipeIngredientsFixture = []
+        recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=4,symbol="kg",ingredient="harina",recipe=recipe))
+        recipeIngredientsFixture.append(createRecipeDetail(id=2,quantity=2,symbol="kg",ingredient="azúcar",recipe=recipe))
+
         pFixture = list([createProduct(recipe, id=i) for i in range(1,2)])
-        ingredientConsumeFixture = createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15)
+        # ingredientConsumeFixture = createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15)
+        po = createProductionOrder()
+
+        flour1IngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,7,1))
+        flour2IngredientStock = createSupplierInvoiceDetail(id=3,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,8,1))
+        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1))
+
+        ingredientConsumeFixture = []
+        ingredientConsumeFixture.append(createProductionOrderConsume(po,flour1IngredientStock,8,id=1))
+        ingredientConsumeFixture.append(createProductionOrderConsume(po,flour2IngredientStock,8,id=2))
+        ingredientConsumeFixture.append(createProductionOrderConsume(po,sugarIngredientStock,8,id=3))
+
 
         productionOrderDetailMock.filter.return_value = podFixture
         productMock.get.return_value=pFixture[0]
-        productionOrderConsumeMock.filter = ingredientConsumeFixture
+        productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
+        recipeDetailMock.filter.return_value = recipeIngredientsFixture        
 
-        service = ProdcutionOrderService(1,None, productionOrderDetailMock, None, None, productionOrderConsumeMock, None,None,None, productMock)
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, productMock)
         actual = service.close()
 
         self.assertEqual(len(actual.productStock), 1)
         self.assertEqual(actual.productStock[0].quantity, 48)
+        self.assertEqual(actual.productStock[0].batch, ProdcutionOrderService.getBatchNumber())
+        self.assertEqual(actual.productStock[0].expirationDate, datetime.datetime(2023,7,1))
+        self.assertEqual(actual.productStock[0].unitCostPrice, 6.9)
 
     def test_isCreated_ok(self):
         poFixture = createProductionOrder()

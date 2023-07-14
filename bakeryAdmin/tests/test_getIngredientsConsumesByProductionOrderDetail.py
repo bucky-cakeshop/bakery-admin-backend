@@ -20,13 +20,14 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
 
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
-        actual = service.getIngredientConsumeByProductionOrderDetail()
+        actual = service.getIngredientsConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = [
-            IngredientConsumeByProductionOrderDetail(
+        expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=2.3,
+            sellPrice=0.0,
+            batch=ProdcutionOrderService.getBatchNumber(),
             ingredientsConsumesByRecipeDetail=[
                 IngredientConsumeByRecipeDetail(
                     productionOrderConsume_id=1,
@@ -39,7 +40,6 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
                 )
             ]
         )
-        ]
 
         self.assertEqual(actual, expected)
 
@@ -59,13 +59,14 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
 
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
-        actual = service.getIngredientConsumeByProductionOrderDetail()
+        actual = service.getIngredientsConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = [
-            IngredientConsumeByProductionOrderDetail(
+        expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=4.6,
+            sellPrice=0.0,
+            batch=ProdcutionOrderService.getBatchNumber(),
             ingredientsConsumesByRecipeDetail=[
                 IngredientConsumeByRecipeDetail(
                     productionOrderConsume_id=1,
@@ -87,7 +88,6 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
                 )
             ]
         )
-        ]
 
         self.assertEqual(actual, expected)
 
@@ -118,13 +118,14 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
 
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
-        actual = service.getIngredientConsumeByProductionOrderDetail()
+        actual = service.getIngredientsConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = [
-            IngredientConsumeByProductionOrderDetail(
+        expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=6.9,
+            sellPrice=0.0,
+            batch=ProdcutionOrderService.getBatchNumber(),
             ingredientsConsumesByRecipeDetail=[
                 IngredientConsumeByRecipeDetail(
                     productionOrderConsume_id=1,
@@ -155,7 +156,6 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
                 )
             ]
         )
-        ]
 
         self.assertEqual(actual, expected)
     
@@ -187,13 +187,14 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
 
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
-        actual = service.getIngredientConsumeByProductionOrderDetail()
+        actual = service.getIngredientsConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = [
-            IngredientConsumeByProductionOrderDetail(
+        expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,7,1),
             costPrice=6.9,
+            sellPrice=0.0,
+            batch=ProdcutionOrderService.getBatchNumber(),
             ingredientsConsumesByRecipeDetail=[
                 IngredientConsumeByRecipeDetail(
                     productionOrderConsume_id=1,
@@ -224,6 +225,5 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
                 )
             ]
         )
-        ]
 
         self.assertEqual(actual, expected)

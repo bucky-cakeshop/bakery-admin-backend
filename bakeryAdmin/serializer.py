@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from bakeryAdmin import models
-from bakeryAdmin.services.productionOrders.ProdcutionOrderService import ProdcutionOrderStatus, ProdcutionOrderStatusEnum, ResultStatus
+from bakeryAdmin.services.productionOrders.ProdcutionOrderService import ProductionOrderStatus, ProdcutionOrderStatusEnum, ResultStatus
 
 class MeasureUnitSerializer(serializers.ModelSerializer):
     class Meta:
@@ -240,7 +240,7 @@ class ProductionOrderStatusSerializer(serializers.Serializer):
     missingProducts = serializers.ListSerializer(child=ProductionOrderMissedProductSerializer())
     
     class Meta:
-        model = ProdcutionOrderStatus
+        model = ProductionOrderStatus
         fields = '__all__'
 
 class ProductSerializer(serializers.ModelSerializer):
