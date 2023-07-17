@@ -14,7 +14,7 @@ from operator import attrgetter, itemgetter
 from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
 from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
 from bakeryAdmin.domain.models.production.IngredientConsumeByProductionOrderDetail import IngredientConsumeByProductionOrderDetail
-from bakeryAdmin.domain.models.production.IngredientConsumeByRecipeDetail import IngredientConsumeByRecipeDetail
+from bakeryAdmin.domain.models.production.ConsumeByRecipeDetail import ConsumeByRecipeDetail, IngredientConsumeByRecipeDetail
 from bakeryAdmin.domain.models.production.ProductionOrderConsumeProductItem import ProductionOrderConsumeProductItem
 from bakeryAdmin.domain.models.production.ProductionOrderMissingProductItem import ProductionOrderMissingProductItem
 from bakeryAdmin.domain.models.production.ProductStockToAdd import ProductStockToAdd
@@ -428,7 +428,7 @@ class ProdcutionOrderService:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
 
         for productionOrderDetail in productionOrderDetails:
-            productDetails = self.getIngredientsConsumesByProductionOrderDetail(productionOrderDetail)
+            productDetails = self.getConsumesByProductionOrderDetail(productionOrderDetail)
             product = self.productObjects.get(recipe_id = productionOrderDetail.recipe_id)
             poStatus.productStock.append(
                 ProductStockToAdd(
@@ -445,42 +445,71 @@ class ProdcutionOrderService:
             )
         return poStatus
 
-    def getIngredientsConsumesByProductionOrderDetail(self, productionOrderDetail) -> IngredientConsumeByProductionOrderDetail:
+    def getConsumesByProductionOrderDetail(self, productionOrderDetail) -> IngredientConsumeByProductionOrderDetail:
+        ingredientsByRecipe = self.getIngredientsConsumesByProductionOrderDetail(productionOrderDetail)
+        productsByRecipe = self.getProductsConsumesByProductionOrderDetail(productionOrderDetail)
+
+        ingredientConsumeByProductionOrderDetail = IngredientConsumeByProductionOrderDetail.of(productionOrderDetail.id)
+        ingredientConsumeByProductionOrderDetail.consumesByRecipeDetail.extend(ingredientsByRecipe)
+        ingredientConsumeByProductionOrderDetail.consumesByRecipeDetail.extend(productsByRecipe)
+            
+        ingredientConsumeByProductionOrderDetail.expirationDate = min(
+            [item.expirationDate for item in ingredientConsumeByProductionOrderDetail.consumesByRecipeDetail]
+        )
+        
+        ingredientConsumeByProductionOrderDetail.costPrice = round(
+            sum(detail.unitCostPrice for detail in ingredientConsumeByProductionOrderDetail.consumesByRecipeDetail),
+            2)
+        ingredientConsumeByProductionOrderDetail.batch = ProdcutionOrderService.getBatchNumber()
+
+        return ingredientConsumeByProductionOrderDetail
+
+    def getIngredientsConsumesByProductionOrderDetail(self, productionOrderDetail) -> List[ConsumeByRecipeDetail]:
         ingredientsConsumes = self.poConsumeObjects.filter(productionOrder_id = self.productionOrderId)
 
         recipeDetails = self.rDetailsObjects.filter(recipe_id = productionOrderDetail.recipe_id)
-        ingredientConsumeByProductionOrderDetail = IngredientConsumeByProductionOrderDetail.of(productionOrderDetail.id)
 
+        consumeByRecipeDetail = []
         for recipeDetail in recipeDetails:
             # Get production order consumes by recipe ingredient
-            ingredientConsumed = [
-                IngredientConsumeByRecipeDetail(
-                recipeDetail_id = recipeDetail.id,
-                productionOrderConsume_id = consumed.id,
-                totalQuantity = consumed.quantity,
-                expirationDate = consumed.supplierInvoiceDetail.expirationDate,
-                unitCostPrice = consumed.supplierInvoiceDetail.price,
-                measureUnit_id = consumed.supplierInvoiceDetail.measureUnit_id,
-                ingredient_id = consumed.supplierInvoiceDetail.ingredient_id
+            itemConsumed = [
+                ConsumeByRecipeDetail(
+                    recipeDetail_id = recipeDetail.id,
+                    totalQuantity = consumed.quantity,
+                    expirationDate = consumed.supplierInvoiceDetail.expirationDate,
+                    unitCostPrice = consumed.supplierInvoiceDetail.price,
                 ) 
                 for consumed in ingredientsConsumes if consumed.supplierInvoiceDetail.ingredient_id == recipeDetail.ingredient_id]
-            ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail.extend(ingredientConsumed)
-
             
-            ingredientConsumeByProductionOrderDetail.expirationDate = min([item.expirationDate for item in ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail])
+            consumeByRecipeDetail.extend(itemConsumed)
             
-            ingredientConsumeByProductionOrderDetail.costPrice = round(
-                sum(detail.unitCostPrice for detail in ingredientConsumeByProductionOrderDetail.ingredientsConsumesByRecipeDetail),
-                2)
-            ingredientConsumeByProductionOrderDetail.batch = ProdcutionOrderService.getBatchNumber()
-        return ingredientConsumeByProductionOrderDetail
+        return consumeByRecipeDetail
 
-    def getIngredientsConsumesByProductionOrder(self) -> List[IngredientConsumeByProductionOrderDetail]:
+    def getProductsConsumesByProductionOrderDetail(self, productionOrderDetail) -> List[ConsumeByRecipeDetail]:
+        productsConsumes = self.poConsumeProductObjects.filter(productionOrder_id = self.productionOrderId)
+
+        recipeDetailsProduct = self.rDetailsProductObjects.filter(recipe_id = productionOrderDetail.recipe_id)
+
+        consumeByRecipeDetail = []
+        for recipeDetail in recipeDetailsProduct:
+            ingredientConsumed = [
+                ConsumeByRecipeDetail(
+                    recipeDetail_id = recipeDetail.id,
+                    totalQuantity = consumed.quantity,
+                    expirationDate = consumed.productStock.expirationDate,
+                    unitCostPrice = consumed.productStock.unitCostPrice,
+                ) 
+                for consumed in productsConsumes if consumed.productStock.product_id == recipeDetail.product_id]
+            
+            consumeByRecipeDetail.extend(ingredientConsumed)
+        return consumeByRecipeDetail
+
+    def getConsumesByProductionOrder(self) -> List[IngredientConsumeByProductionOrderDetail]:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
 
         consumesByProductionOrderDetail = []
         for productionOrderDetail in productionOrderDetails:
-            ingredientConsumeByProductionOrderDetail = self.getIngredientsConsumesByProductionOrderDetail(productionOrderDetail)
+            ingredientConsumeByProductionOrderDetail = self.getConsumesByProductionOrderDetail(productionOrderDetail)
             consumesByProductionOrderDetail.append(ingredientConsumeByProductionOrderDetail)
         return consumesByProductionOrderDetail
     

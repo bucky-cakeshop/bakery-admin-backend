@@ -244,13 +244,15 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.productionOrderConsumes[0].quantity, 5)
         self.assertEqual(actual.productionOrderConsumesProduct[0].quantity, 5)
 
+    @patch('bakeryAdmin.models.RecipeDetailProduct.objects')    
+    @patch('bakeryAdmin.models.ProductionOrderConsumeProduct.objects')    
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
     @patch('bakeryAdmin.models.SupplierInvoiceDetail.objects')
     @patch('bakeryAdmin.models.ProductStock.objects')
     @patch('bakeryAdmin.models.Product.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_close_ok(self,productionOrderDetailMock, productMock, productStockMock, supplierInvoiceDetailMock,productionOrderConsumeMock, recipeDetailMock):
+    def test_close_ok(self,productionOrderDetailMock, productMock, productStockMock, supplierInvoiceDetailMock,productionOrderConsumeMock, recipeDetailMock, productionOrderConsumeProductMock, recipeDetailProductMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         recipe = createRecipe()
         recipeIngredientsFixture = []
@@ -275,8 +277,10 @@ class ProductionOrderServiceTest(TestCase):
         productMock.get.return_value=pFixture[0]
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
         recipeDetailMock.filter.return_value = recipeIngredientsFixture        
+        productionOrderConsumeProductMock.filter.return_value = []
+        recipeDetailProductMock.filter.return_value = []        
 
-        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, productMock)
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock,recipeDetailProductMock, None,productionOrderConsumeProductMock, productMock)
         actual = service.close()
 
         self.assertEqual(len(actual.productStock), 1)

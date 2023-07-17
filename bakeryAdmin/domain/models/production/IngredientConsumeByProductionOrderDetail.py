@@ -3,12 +3,12 @@ from typing import List
 import datetime
 from django.utils import timezone
 
-from bakeryAdmin.domain.models.production.IngredientConsumeByRecipeDetail import IngredientConsumeByRecipeDetail
+from bakeryAdmin.domain.models.production.ConsumeByRecipeDetail import ConsumeByRecipeDetail
 
 @dataclass
 class IngredientConsumeByProductionOrderDetail:
     productionOrderDetail_id: int
-    ingredientsConsumesByRecipeDetail: List[IngredientConsumeByRecipeDetail]
+    consumesByRecipeDetail: List[ConsumeByRecipeDetail]
     expirationDate: datetime.datetime
     costPrice: float
     sellPrice: float
@@ -18,7 +18,7 @@ class IngredientConsumeByProductionOrderDetail:
     def of(self, productionOrderDetailId):
         return IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id = productionOrderDetailId,
-            ingredientsConsumesByRecipeDetail = [],
+            consumesByRecipeDetail = [],
             expirationDate=timezone.now(),
             costPrice=0,
             sellPrice=0,

@@ -5,11 +5,13 @@ from bakeryAdmin import models
 from bakeryAdmin.services.productionOrders.ProdcutionOrderService import *
 from .fixtureUtilities import *
 
-class GetIngredientConsumeByProductionOrderDetail(TestCase):
+class GetIngredientConsumeByProductionOrder(TestCase):
+    @patch('bakeryAdmin.models.RecipeDetailProduct.objects')
+    @patch('bakeryAdmin.models.ProductionOrderConsumeProduct.objects')    
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_oneIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock):
+    def test_oneIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock, productionOrderConsumeProductMock, recipeDetailProductMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         recipe = createRecipe()
         recipeIngredientsFixture = list([createRecipeDetail(id=i,quantity=4,symbol="kg",ingredient="harina",recipe=recipe) for i in range(1,2)])
@@ -18,9 +20,11 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = recipeIngredientsFixture
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
+        productionOrderConsumeProductMock.filter.return_value = []
+        recipeDetailProductMock.filter.return_value = []
 
-        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
-        actual = service.getIngredientsConsumesByProductionOrder()
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
+        actual = service.getConsumesByProductionOrder()
 
         expected = [
             IngredientConsumeByProductionOrderDetail(
@@ -29,12 +33,9 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
             costPrice=2.3,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
-            ingredientsConsumesByRecipeDetail=[
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=1,
+            consumesByRecipeDetail=[
+                ConsumeByRecipeDetail(
                     recipeDetail_id=1,
-                    ingredient_id=1,
-                    measureUnit_id=1,
                     totalQuantity=16,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,8,1)
@@ -45,10 +46,12 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
 
         self.assertEqual(actual, expected)
 
+    @patch('bakeryAdmin.models.RecipeDetailProduct.objects')
+    @patch('bakeryAdmin.models.ProductionOrderConsumeProduct.objects')
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_twoIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock):
+    def test_twoIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock, productionOrderConsumeProductMock, recipeDetailProductMock):
         podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
         recipe = createRecipe()
         recipeIngredientsFixture = list([createRecipeDetail(id=i,quantity=4,symbol="kg",ingredient="harina",recipe=recipe) for i in range(1,2)])
@@ -59,9 +62,11 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = recipeIngredientsFixture
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
+        productionOrderConsumeProductMock.filter.return_value = []
+        recipeDetailProductMock.filter.return_value = []
 
-        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
-        actual = service.getIngredientsConsumesByProductionOrder()
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
+        actual = service.getConsumesByProductionOrder()
 
         expected = [
             IngredientConsumeByProductionOrderDetail(
@@ -70,21 +75,15 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
             costPrice=4.6,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
-            ingredientsConsumesByRecipeDetail=[
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=1,
+            consumesByRecipeDetail=[
+                ConsumeByRecipeDetail(
                     recipeDetail_id=1,
-                    ingredient_id=1,
-                    measureUnit_id=1,
                     totalQuantity=8,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,8,1)
                 ),
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=2,
+                ConsumeByRecipeDetail(
                     recipeDetail_id=1,
-                    ingredient_id=1,
-                    measureUnit_id=1,
                     totalQuantity=8,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,8,1)
@@ -95,10 +94,12 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
 
         self.assertEqual(actual, expected)
 
+    @patch('bakeryAdmin.models.RecipeDetailProduct.objects')
+    @patch('bakeryAdmin.models.ProductionOrderConsumeProduct.objects')
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_twoRecipeDetailsTwoIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock):
+    def test_twoRecipeDetailsTwoIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock, productionOrderConsumeProductMock, recipeDetailProductMock):
                 
         recipe = createRecipe()
         recipeIngredientsFixture = []
@@ -120,9 +121,11 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = recipeIngredientsFixture
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
+        productionOrderConsumeProductMock.filter.return_value = []
+        recipeDetailProductMock.filter.return_value = []        
 
-        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
-        actual = service.getIngredientsConsumesByProductionOrder()
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
+        actual = service.getConsumesByProductionOrder()
 
         expected = [
             IngredientConsumeByProductionOrderDetail(
@@ -131,30 +134,21 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
             costPrice=6.9,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
-            ingredientsConsumesByRecipeDetail=[
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=1,
+            consumesByRecipeDetail=[
+                ConsumeByRecipeDetail(
                     recipeDetail_id=1,
-                    ingredient_id=1,
-                    measureUnit_id=1,
                     totalQuantity=8,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,8,1)
                 ),
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=2,
+                ConsumeByRecipeDetail(
                     recipeDetail_id=1,
-                    ingredient_id=1,
-                    measureUnit_id=1,
                     totalQuantity=8,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,8,1)
                 ),
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=3,
+                ConsumeByRecipeDetail(
                     recipeDetail_id=2,
-                    ingredient_id=2,
-                    measureUnit_id=1,
                     totalQuantity=8,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,8,1)
@@ -165,10 +159,12 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
 
         self.assertEqual(actual, expected)
     
+    @patch('bakeryAdmin.models.RecipeDetailProduct.objects')    
+    @patch('bakeryAdmin.models.ProductionOrderConsumeProduct.objects')    
     @patch('bakeryAdmin.models.ProductionOrderConsume.objects')
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
-    def test_twoRecipeDetailsTwoIngredientConsumeItem_expirationDate(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock):
+    def test_twoRecipeDetailsTwoIngredientConsumeItem_expirationDate(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock, productionOrderConsumeProductMock, recipeDetailProductMock):
                 
         recipe = createRecipe()
         recipeIngredientsFixture = []
@@ -191,9 +187,11 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = recipeIngredientsFixture
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
+        productionOrderConsumeProductMock.filter.return_value = []
+        recipeDetailProductMock.filter.return_value = []        
 
-        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, None,None,None, None)
-        actual = service.getIngredientsConsumesByProductionOrder()
+        service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
+        actual = service.getConsumesByProductionOrder()
 
         expected = [
             IngredientConsumeByProductionOrderDetail(
@@ -202,30 +200,21 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
             costPrice=6.9,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
-            ingredientsConsumesByRecipeDetail=[
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=1,
+            consumesByRecipeDetail=[
+                ConsumeByRecipeDetail(
                     recipeDetail_id=1,
-                    ingredient_id=1,
-                    measureUnit_id=1,
                     totalQuantity=8,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,7,1)
                 ),
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=2,
+                ConsumeByRecipeDetail(
                     recipeDetail_id=1,
-                    ingredient_id=1,
-                    measureUnit_id=1,
                     totalQuantity=8,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,8,1)
                 ),
-                IngredientConsumeByRecipeDetail(
-                    productionOrderConsume_id=3,
+                ConsumeByRecipeDetail(
                     recipeDetail_id=2,
-                    ingredient_id=2,
-                    measureUnit_id=1,
                     totalQuantity=8,
                     unitCostPrice=2.3,
                     expirationDate=datetime.datetime(2023,8,1)
