@@ -30,7 +30,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
             IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
-            costPrice=2.3,
+            costPrice=36.8,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -72,7 +72,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
             IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
-            costPrice=4.6,
+            costPrice=36.8,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -106,8 +106,8 @@ class GetIngredientConsumeByProductionOrder(TestCase):
         recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=4,symbol="kg",ingredient="harina",recipe=recipe))
         recipeIngredientsFixture.append(createRecipeDetail(id=2,quantity=2,symbol="kg",ingredient="azúcar",recipe=recipe))
 
-        flourIngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=25,expirationDate=datetime.datetime(2023,8,1))
-        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1))
+        flourIngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=25,expirationDate=datetime.datetime(2023,8,1), price=2.3)
+        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1), price=3.2)
         
         po = createProductionOrder()
         podFixture = []
@@ -131,7 +131,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
             IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
-            costPrice=6.9,
+            costPrice=62.4,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -150,7 +150,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
                 ConsumeByRecipeDetail(
                     recipeDetail_id=2,
                     totalQuantity=8,
-                    unitCostPrice=2.3,
+                    unitCostPrice=3.2,
                     expirationDate=datetime.datetime(2023,8,1)
                 )
             ]
@@ -171,9 +171,9 @@ class GetIngredientConsumeByProductionOrder(TestCase):
         recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=4,symbol="kg",ingredient="harina",recipe=recipe))
         recipeIngredientsFixture.append(createRecipeDetail(id=2,quantity=2,symbol="kg",ingredient="azúcar",recipe=recipe))
 
-        flour1IngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,7,1))
-        flour2IngredientStock = createSupplierInvoiceDetail(id=3,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,8,1))
-        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1))
+        flour1IngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,7,1), price=2.3)
+        flour2IngredientStock = createSupplierInvoiceDetail(id=3,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,8,1), price=2.3)
+        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1), price=3.2)
         
         po = createProductionOrder()
         podFixture = []
@@ -197,7 +197,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
             IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,7,1),
-            costPrice=6.9,
+            costPrice=62.4,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -216,7 +216,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
                 ConsumeByRecipeDetail(
                     recipeDetail_id=2,
                     totalQuantity=8,
-                    unitCostPrice=2.3,
+                    unitCostPrice=3.2,
                     expirationDate=datetime.datetime(2023,8,1)
                 )
             ]

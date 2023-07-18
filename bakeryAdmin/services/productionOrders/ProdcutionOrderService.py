@@ -458,7 +458,7 @@ class ProdcutionOrderService:
         )
         
         ingredientConsumeByProductionOrderDetail.costPrice = round(
-            sum(detail.unitCostPrice for detail in ingredientConsumeByProductionOrderDetail.consumesByRecipeDetail),
+            sum((detail.unitCostPrice * detail.totalQuantity) for detail in ingredientConsumeByProductionOrderDetail.consumesByRecipeDetail),
             2)
         ingredientConsumeByProductionOrderDetail.batch = ProdcutionOrderService.getBatchNumber()
 

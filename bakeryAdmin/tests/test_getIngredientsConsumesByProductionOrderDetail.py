@@ -13,11 +13,22 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
     @patch('bakeryAdmin.models.RecipeDetail.objects')
     @patch('bakeryAdmin.models.ProductionOrderDetail.objects')
     def test_oneIngredientConsumeItem(self,productionOrderDetailMock, recipeDetailMock,productionOrderConsumeMock, productionOrderConsumeProductMock, recipeDetailProductMock):
-        podFixture = list([createProductionOrderDetail(id=i, quantity=4) for i in range(1,2)])
+
         recipe = createRecipe()
-        recipeIngredientsFixture = list([createRecipeDetail(id=i,quantity=4,symbol="kg",ingredient="harina",recipe=recipe) for i in range(1,2)])
-        ingredientConsumeFixture = list([createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(expirationDate=datetime.datetime(2023,8,1)),16,id=i) for i in range(1,2)])
+        recipeIngredientsFixture = []
+        recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=4,symbol="kg",ingredient="harina",recipe=recipe))
+
+        flourIngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=25,expirationDate=datetime.datetime(2023,8,1),price=2.3)
+        
+        po = createProductionOrder()
+        podFixture = []
+        podFixture.append(createProductionOrderDetail(id=1, quantity=4,productionOrder=po,recipe=recipe)) 
+
+        ingredientConsumeFixture = []
+        ingredientConsumeFixture.append(createProductionOrderConsume(po,flourIngredientStock,16,id=1))
+
         productConsumeFixture = []
+
 
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = recipeIngredientsFixture
@@ -31,7 +42,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
-            costPrice=2.3,
+            costPrice=36.8,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -72,7 +83,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
-            costPrice=4.6,
+            costPrice=36.8,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -105,8 +116,8 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=4,symbol="kg",ingredient="harina",recipe=recipe))
         recipeIngredientsFixture.append(createRecipeDetail(id=2,quantity=2,symbol="kg",ingredient="azúcar",recipe=recipe))
 
-        flourIngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=25,expirationDate=datetime.datetime(2023,8,1))
-        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1))
+        flourIngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=25,expirationDate=datetime.datetime(2023,8,1), price=2.3)
+        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1), price=3.2)
         
         po = createProductionOrder()
         podFixture = []
@@ -131,7 +142,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
-            costPrice=6.9,
+            costPrice=62.4,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -150,7 +161,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
                 ConsumeByRecipeDetail(
                     recipeDetail_id=2,
                     totalQuantity=8,
-                    unitCostPrice=2.3,
+                    unitCostPrice=3.2,
                     expirationDate=datetime.datetime(2023,8,1)
                 )
             ]
@@ -170,9 +181,9 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=4,symbol="kg",ingredient="harina",recipe=recipe))
         recipeIngredientsFixture.append(createRecipeDetail(id=2,quantity=2,symbol="kg",ingredient="azúcar",recipe=recipe))
 
-        flour1IngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,7,1))
-        flour2IngredientStock = createSupplierInvoiceDetail(id=3,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,8,1))
-        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1))
+        flour1IngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,7,1), price=2.3)
+        flour2IngredientStock = createSupplierInvoiceDetail(id=3,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,8,1), price=2.3)
+        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1), price=3.2)
         
         po = createProductionOrder()
         podFixture = []
@@ -198,7 +209,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,7,1),
-            costPrice=6.9,
+            costPrice=62.4,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -217,7 +228,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
                 ConsumeByRecipeDetail(
                     recipeDetail_id=2,
                     totalQuantity=8,
-                    unitCostPrice=2.3,
+                    unitCostPrice=3.2,
                     expirationDate=datetime.datetime(2023,8,1)
                 )
             ]
@@ -234,10 +245,12 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
                 
         recipe = createRecipe()
         recipeIngredientsFixture = []
-        recipeIngredientsFixture.append(createRecipeDetail(id=1,symbol="kg",ingredient="harina",recipe=recipe))
-        recipeIngredientsFixture.append(createRecipeDetailProduct(id=2,measureUnit="kg",product="masa base tarta",recipe=recipe))
+        recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=16,symbol="kg",ingredient="harina",recipe=recipe))
 
-        flourIngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=25,expirationDate=datetime.datetime(2023,8,1))
+        recipeProductsFixture = []
+        recipeProductsFixture.append(createRecipeDetailProduct(id=2,quantity=5,symbol="kg",product="masa base tarta",recipe=recipe))
+
+        flourIngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=25,expirationDate=datetime.datetime(2023,8,1), price=2.3)
         cakeBaseProductStock = createProductStock(id=2,product='masa base tarta',symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,7,1), costPrice=4.1)
         
         po = createProductionOrder()
@@ -249,21 +262,21 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         ingredientConsumeFixture.append(createProductionOrderConsume(po,flourIngredientStock,8,id=2))
 
         productConsumeFixture = []
-        productConsumeFixture.append(createProductionOrderConsumeProduct(po,cakeBaseProductStock,5))
+        productConsumeFixture.append(createProductionOrderConsumeProduct(po,cakeBaseProductStock,20))
 
         productionOrderDetailMock.filter.return_value = podFixture
         recipeDetailMock.filter.return_value = recipeIngredientsFixture
         productionOrderConsumeMock.filter.return_value = ingredientConsumeFixture
         productionOrderConsumeProductMock.filter.return_value = productConsumeFixture
-        recipeDetailProductMock.filter.return_value = []        
+        recipeDetailProductMock.filter.return_value = recipeProductsFixture        
 
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
         actual = service.getConsumesByProductionOrderDetail(podFixture[0])
 
         expected = IngredientConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
-            expirationDate=datetime.datetime(2023,8,1),
-            costPrice=6.9,
+            expirationDate=datetime.datetime(2023,7,1),
+            costPrice=118.8,
             sellPrice=0.0,
             batch=ProdcutionOrderService.getBatchNumber(),
             consumesByRecipeDetail=[
@@ -281,9 +294,9 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
                 ),
                 ConsumeByRecipeDetail(
                     recipeDetail_id=2,
-                    totalQuantity=8,
-                    unitCostPrice=2.3,
-                    expirationDate=datetime.datetime(2023,8,1)
+                    totalQuantity=20,
+                    unitCostPrice=4.1,
+                    expirationDate=datetime.datetime(2023,7,1)
                 )
             ]
         )

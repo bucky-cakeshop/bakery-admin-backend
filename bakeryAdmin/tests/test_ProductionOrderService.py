@@ -263,9 +263,9 @@ class ProductionOrderServiceTest(TestCase):
         # ingredientConsumeFixture = createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15)
         po = createProductionOrder()
 
-        flour1IngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,7,1))
-        flour2IngredientStock = createSupplierInvoiceDetail(id=3,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,8,1))
-        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1))
+        flour1IngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,7,1), price=2.3)
+        flour2IngredientStock = createSupplierInvoiceDetail(id=3,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,8,1), price=2.3)
+        sugarIngredientStock = createSupplierInvoiceDetail(id=2,ingredient="azúcar",symbol="kg",quantity=20,expirationDate=datetime.datetime(2023,8,1), price=3.2)
 
         ingredientConsumeFixture = []
         ingredientConsumeFixture.append(createProductionOrderConsume(po,flour1IngredientStock,8,id=1))
@@ -287,7 +287,7 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.productStock[0].quantity, 48)
         self.assertEqual(actual.productStock[0].batch, ProdcutionOrderService.getBatchNumber())
         self.assertEqual(actual.productStock[0].expirationDate, datetime.datetime(2023,7,1))
-        self.assertEqual(actual.productStock[0].unitCostPrice, 6.9)
+        self.assertEqual(actual.productStock[0].unitCostPrice, 62.4)
 
     def test_isCreated_ok(self):
         poFixture = createProductionOrder()
