@@ -39,7 +39,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
         actual = service.getConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = IngredientConsumeByProductionOrderDetail(
+        expected = ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=36.8,
@@ -80,7 +80,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
         actual = service.getConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = IngredientConsumeByProductionOrderDetail(
+        expected = ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=36.8,
@@ -139,7 +139,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
         actual = service.getConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = IngredientConsumeByProductionOrderDetail(
+        expected = ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=62.4,
@@ -206,7 +206,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
         actual = service.getConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = IngredientConsumeByProductionOrderDetail(
+        expected = ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,7,1),
             costPrice=62.4,
@@ -273,7 +273,7 @@ class GetIngredientConsumeByProductionOrderDetail(TestCase):
         service = ProdcutionOrderService(1,None, productionOrderDetailMock, recipeDetailMock, None, productionOrderConsumeMock, recipeDetailProductMock, None, productionOrderConsumeProductMock, None)
         actual = service.getConsumesByProductionOrderDetail(podFixture[0])
 
-        expected = IngredientConsumeByProductionOrderDetail(
+        expected = ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,7,1),
             costPrice=118.8,

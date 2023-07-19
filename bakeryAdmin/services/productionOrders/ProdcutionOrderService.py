@@ -13,7 +13,7 @@ from operator import attrgetter, itemgetter
 
 from bakeryAdmin.domain.models.production.AggregatedProduct import AggregatedProduct
 from bakeryAdmin.domain.models.production.AggregatedTotalProduct import AggregatedTotalProduct
-from bakeryAdmin.domain.models.production.IngredientConsumeByProductionOrderDetail import IngredientConsumeByProductionOrderDetail
+from bakeryAdmin.domain.models.production.ConsumeByProductionOrderDetail import ConsumeByProductionOrderDetail
 from bakeryAdmin.domain.models.production.ConsumeByRecipeDetail import ConsumeByRecipeDetail, IngredientConsumeByRecipeDetail
 from bakeryAdmin.domain.models.production.ProductionOrderConsumeProductItem import ProductionOrderConsumeProductItem
 from bakeryAdmin.domain.models.production.ProductionOrderMissingProductItem import ProductionOrderMissingProductItem
@@ -430,26 +430,29 @@ class ProdcutionOrderService:
         for productionOrderDetail in productionOrderDetails:
             productDetails = self.getConsumesByProductionOrderDetail(productionOrderDetail)
             product = self.productObjects.get(recipe_id = productionOrderDetail.recipe_id)
+            quantity = product.quantityByRecipe * productionOrderDetail.quantity
+            unitCostPrice = productDetails.costPrice/quantity
+            unitSellPrice = unitCostPrice * product.utilityMultiplier
             poStatus.productStock.append(
                 ProductStockToAdd(
-                productId=product.id,
-                measureUnitId=product.measureUnit_id,
-                quantity=product.quantityByRecipe * productionOrderDetail.quantity,
-                quantityConsumed=0,
-                isForSell=product.isForSell,
-                batch=productDetails.batch,
+                productId = product.id,
+                measureUnitId = product.measureUnit_id,
+                quantity = quantity,
+                quantityConsumed = 0,
+                isForSell = product.isForSell,
+                batch = productDetails.batch,
                 expirationDate = productDetails.expirationDate,
-                unitCostPrice=productDetails.costPrice,
-                unitSellPrice=productDetails.sellPrice
+                unitCostPrice = unitCostPrice,
+                unitSellPrice = unitSellPrice
                 )
             )
         return poStatus
 
-    def getConsumesByProductionOrderDetail(self, productionOrderDetail) -> IngredientConsumeByProductionOrderDetail:
+    def getConsumesByProductionOrderDetail(self, productionOrderDetail) -> ConsumeByProductionOrderDetail:
         ingredientsByRecipe = self.getIngredientsConsumesByProductionOrderDetail(productionOrderDetail)
         productsByRecipe = self.getProductsConsumesByProductionOrderDetail(productionOrderDetail)
 
-        ingredientConsumeByProductionOrderDetail = IngredientConsumeByProductionOrderDetail.of(productionOrderDetail.id)
+        ingredientConsumeByProductionOrderDetail = ConsumeByProductionOrderDetail.of(productionOrderDetail.id)
         ingredientConsumeByProductionOrderDetail.consumesByRecipeDetail.extend(ingredientsByRecipe)
         ingredientConsumeByProductionOrderDetail.consumesByRecipeDetail.extend(productsByRecipe)
             
@@ -504,7 +507,7 @@ class ProdcutionOrderService:
             consumeByRecipeDetail.extend(ingredientConsumed)
         return consumeByRecipeDetail
 
-    def getConsumesByProductionOrder(self) -> List[IngredientConsumeByProductionOrderDetail]:
+    def getConsumesByProductionOrder(self) -> List[ConsumeByProductionOrderDetail]:
         productionOrderDetails = self.poDetailsObjects.filter(productionOrder_id = self.productionOrderId)
 
         consumesByProductionOrderDetail = []

@@ -6,7 +6,7 @@ from django.utils import timezone
 from bakeryAdmin.domain.models.production.ConsumeByRecipeDetail import ConsumeByRecipeDetail
 
 @dataclass
-class IngredientConsumeByProductionOrderDetail:
+class ConsumeByProductionOrderDetail:
     productionOrderDetail_id: int
     consumesByRecipeDetail: List[ConsumeByRecipeDetail]
     expirationDate: datetime.datetime
@@ -16,7 +16,7 @@ class IngredientConsumeByProductionOrderDetail:
 
     @classmethod
     def of(self, productionOrderDetailId):
-        return IngredientConsumeByProductionOrderDetail(
+        return ConsumeByProductionOrderDetail(
             productionOrderDetail_id = productionOrderDetailId,
             consumesByRecipeDetail = [],
             expirationDate=timezone.now(),

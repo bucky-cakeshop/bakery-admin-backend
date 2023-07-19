@@ -58,6 +58,7 @@ class Product(models.Model):
     quantityByRecipe = models.DecimalField(max_digits=5,decimal_places=2)
     measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.DO_NOTHING, default=1)
     isForSell = models.BooleanField(default=False)
+    utilityMultiplier = models.DecimalField(max_digits=5,decimal_places=2, default=0.0)
 
 class RecipeDetailProduct(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,related_name='RecipeDetail_Recipe')

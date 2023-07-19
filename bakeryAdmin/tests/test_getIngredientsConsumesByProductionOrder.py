@@ -27,7 +27,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
         actual = service.getConsumesByProductionOrder()
 
         expected = [
-            IngredientConsumeByProductionOrderDetail(
+            ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=36.8,
@@ -69,7 +69,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
         actual = service.getConsumesByProductionOrder()
 
         expected = [
-            IngredientConsumeByProductionOrderDetail(
+            ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=36.8,
@@ -128,7 +128,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
         actual = service.getConsumesByProductionOrder()
 
         expected = [
-            IngredientConsumeByProductionOrderDetail(
+            ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,8,1),
             costPrice=62.4,
@@ -194,7 +194,7 @@ class GetIngredientConsumeByProductionOrder(TestCase):
         actual = service.getConsumesByProductionOrder()
 
         expected = [
-            IngredientConsumeByProductionOrderDetail(
+            ConsumeByProductionOrderDetail(
             productionOrderDetail_id=1,
             expirationDate=datetime.datetime(2023,7,1),
             costPrice=62.4,

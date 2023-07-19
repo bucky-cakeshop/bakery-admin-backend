@@ -259,8 +259,9 @@ class ProductionOrderServiceTest(TestCase):
         recipeIngredientsFixture.append(createRecipeDetail(id=1,quantity=4,symbol="kg",ingredient="harina",recipe=recipe))
         recipeIngredientsFixture.append(createRecipeDetail(id=2,quantity=2,symbol="kg",ingredient="azúcar",recipe=recipe))
 
-        pFixture = list([createProduct(recipe, id=i) for i in range(1,2)])
-        # ingredientConsumeFixture = createProductionOrderConsume(createProductionOrder(),createSupplierInvoiceDetail(),15)
+        pFixture = []
+        pFixture.append(createProduct(recipe, id=1,quantityByRecipe=12, utilityMultiplier=1.2))
+
         po = createProductionOrder()
 
         flour1IngredientStock = createSupplierInvoiceDetail(id=1,ingredient="harina",symbol="kg",quantity=8,expirationDate=datetime.datetime(2023,7,1), price=2.3)
@@ -287,7 +288,9 @@ class ProductionOrderServiceTest(TestCase):
         self.assertEqual(actual.productStock[0].quantity, 48)
         self.assertEqual(actual.productStock[0].batch, ProdcutionOrderService.getBatchNumber())
         self.assertEqual(actual.productStock[0].expirationDate, datetime.datetime(2023,7,1))
-        self.assertEqual(actual.productStock[0].unitCostPrice, 62.4)
+        self.assertEqual(actual.productStock[0].quantity, 48)
+        self.assertEqual(actual.productStock[0].unitCostPrice, 1.3)
+        self.assertEqual(actual.productStock[0].unitSellPrice, 1.56)
 
     def test_isCreated_ok(self):
         poFixture = createProductionOrder()

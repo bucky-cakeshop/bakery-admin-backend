@@ -124,7 +124,7 @@ def createProductionOrderConsumeProduct(productionOrder,productStock,quantity) -
         quantity = quantity
     )
 
-def createProduct(recipe,id=1,name="Producto masa", description="Producto masa desc", quantityByRecipe=12, measureUnit="u", isForSell=True) -> models.Product:
+def createProduct(recipe,id=1,name="Producto masa", description="Producto masa desc", quantityByRecipe=12, measureUnit="u", isForSell=True, utilityMultiplier = 1.2) -> models.Product:
     return models.Product(
         id=id,
         recipe = recipe,
@@ -132,7 +132,8 @@ def createProduct(recipe,id=1,name="Producto masa", description="Producto masa d
         description = description, 
         quantityByRecipe = quantityByRecipe,
         measureUnit = measureUnits[measureUnit],
-        isForSell = isForSell
+        isForSell = isForSell,
+        utilityMultiplier = utilityMultiplier
     )
 
 def createRecipe_TortitasPinchadas() -> tuple[models.Recipe, models.RecipeDetail]:
