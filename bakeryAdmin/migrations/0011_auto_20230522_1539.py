@@ -8,7 +8,7 @@ DEFAULT_MEASURE_UNITS = (
     (3,'Litro','Lt.', 'Unidad de medida litro'),
     (4,'Mililitro','Ml.', 'Unidad de medida mililitro'),
     (5,'Unitario','U.', 'Unidad de medida unitaria'),
-    (5,'Pliego','Pl.', 'Unidad de medida utilizada por ejemplo en el papel manteca'),
+    (6,'Pliego','Pl.', 'Unidad de medida utilizada por ejemplo en el papel manteca'),
 )
 
 def add_measure_units(apps, schema_editor):
