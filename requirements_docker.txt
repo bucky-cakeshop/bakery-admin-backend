@@ -13,7 +13,6 @@ Jinja2==3.1.2
 MarkupSafe==2.1.2
 mock==5.0.2
 mock-django==0.6.10
-psycopg2==2.9.6
 psycopg2-binary==2.9.7
 pytz==2023.3
 requests==2.30.0
