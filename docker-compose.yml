@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:14.1-alpine
     restart: always
-    container_name: bakery_admin_db
+    container_name: bakery_admin_db_dev
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -13,16 +13,16 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
-  web:
-      build: .
-      command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-      container_name: bakery_admin_backend
-      depends_on:
-      - db
-      volumes:
-        - .:/bakery_admin_backend
-      ports:
-        - "8000:8000"
+  # web:
+  #     build: .
+  #     command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+  #     container_name: bakery_admin_backend
+  #     depends_on:
+  #     - db
+  #     volumes:
+  #       - .:/bakery_admin_backend
+  #     ports:
+  #       - "8000:8000"
   # zookeeper:
   #   image: confluentinc/cp-zookeeper:latest
   #   environment:

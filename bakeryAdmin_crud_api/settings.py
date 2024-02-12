@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'bakeryAdmin_crud_api.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(default="postgresql://postgres:postgres@localhost:5432/bakeryAdmin_db_restapi")
+    'default': dj_database_url.config(default="postgresql://postgres:postgres@pgsql_db:5432/bakeryadmin_db_restapi")
 }
 
 

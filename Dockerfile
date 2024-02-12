@@ -16,9 +16,11 @@ WORKDIR /bakery_admin_backend
 ADD . /bakery_admin_backend/
 
 # Install postgresql-dev
-# RUN apk add libpq-dev
+# RUN apk add postgresql-client
 # RUN apk add postgresql-dev
 # RUN python -m pip install psycopg2-binary
 
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements_docker.txt
+
+RUN apk add postgresql-client
